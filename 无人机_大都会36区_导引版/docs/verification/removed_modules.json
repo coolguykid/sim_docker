@@ -1,0 +1,17 @@
+[
+  "algorithms/mcts_path_utils.py",
+  "algorithms/mcts_router.py",
+  "algorithms/real_mcts_router.py",
+  "distributed/inference_server.py",
+  "models/__init__.py",
+  "models/loader.py",
+  "models/networks.py",
+  "training/__init__.py",
+  "training/legacy/__init__.py",
+  "training/legacy/dynamic_nn.py",
+  "training/legacy/liandan_drl_global_R2.py",
+  "training/train_replan_filter_v3_5.py",
+  "training/train_router_v3_3.py",
+  "training/train_router_v3_4.py",
+  "training/train_universal_avoidance.py"
+]

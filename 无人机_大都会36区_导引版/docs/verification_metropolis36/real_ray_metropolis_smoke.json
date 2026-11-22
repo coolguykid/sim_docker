@@ -1,0 +1,26 @@
+[
+  {
+    "dt": 1.0,
+    "arrived": 2,
+    "last_arrival": 1891.973860454204,
+    "pids": [
+      5308,
+      35204
+    ],
+    "private_scope_checks": 35,
+    "actual_region_plans": 31,
+    "goal_error_m": 0.0
+  },
+  {
+    "dt": 0.1,
+    "arrived": 2,
+    "last_arrival": 1891.973860454204,
+    "pids": [
+      18724,
+      23024
+    ],
+    "private_scope_checks": 35,
+    "actual_region_plans": 31,
+    "goal_error_m": 0.0
+  }
+]

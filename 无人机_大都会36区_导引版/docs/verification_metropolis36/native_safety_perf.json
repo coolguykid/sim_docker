@@ -1,0 +1,65 @@
+[
+  {
+    "mode": "python_reference",
+    "missions": 100,
+    "seconds": 15.126830899999998,
+    "metrics": {
+      "reservation_attempts": 100,
+      "accepted_count": 100,
+      "deferred_count": 0,
+      "shifted_count": 81,
+      "phase_pairs_checked": 636629,
+      "spatial_candidate_count": 380616,
+      "max_shift_seconds": 112.92238568352444,
+      "active_finite_phases": 13831,
+      "active_holds": 0,
+      "active_uavs": 100,
+      "spatial_cell_count": 44774,
+      "large_phase_count": 0,
+      "pending_count": 0
+    },
+    "maximum_departure": 112.92238568352444
+  },
+  {
+    "mode": "native_scalar",
+    "missions": 100,
+    "seconds": 6.392318899999999,
+    "metrics": {
+      "reservation_attempts": 100,
+      "accepted_count": 100,
+      "deferred_count": 0,
+      "shifted_count": 81,
+      "phase_pairs_checked": 636629,
+      "spatial_candidate_count": 380616,
+      "max_shift_seconds": 112.92238568352444,
+      "active_finite_phases": 13831,
+      "active_holds": 0,
+      "active_uavs": 100,
+      "spatial_cell_count": 44774,
+      "large_phase_count": 0,
+      "pending_count": 0
+    },
+    "maximum_departure": 112.92238568352444
+  },
+  {
+    "mode": "native_batch",
+    "missions": 100,
+    "seconds": 1.741247099999999,
+    "metrics": {
+      "reservation_attempts": 100,
+      "accepted_count": 100,
+      "deferred_count": 0,
+      "shifted_count": 81,
+      "phase_pairs_checked": 636629,
+      "spatial_candidate_count": 380616,
+      "max_shift_seconds": 112.92238568352444,
+      "active_finite_phases": 13831,
+      "active_holds": 0,
+      "active_uavs": 100,
+      "spatial_cell_count": 44774,
+      "large_phase_count": 0,
+      "pending_count": 0
+    },
+    "maximum_departure": 112.92238568352444
+  }
+]

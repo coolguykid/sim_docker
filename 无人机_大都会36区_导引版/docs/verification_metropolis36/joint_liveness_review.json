@@ -1,0 +1,102 @@
+{
+  "scope": "Historical regional-prefix controller liveness review; not the final acceptance result",
+  "historical_snapshot": "docs\\verification_metropolis36\\traffic_failure.pkl",
+  "snapshot_sha256": "7df60f718d30c853e0ce93b673ecb43ec12c400123cfe4c16dfd9ab8b1d73281",
+  "stationary_aircraft": 369,
+  "wait_cycles": 12,
+  "full_next_prefix_joint_groups_accepted": 0,
+  "matching_partial_distance_limits_m": [
+    64,
+    32,
+    16,
+    8,
+    4,
+    2,
+    1
+  ],
+  "partial_joint_groups_accepted": [
+    {
+      "uids": [
+        148,
+        237
+      ],
+      "distance_m": 2
+    },
+    {
+      "uids": [
+        340,
+        390
+      ],
+      "distance_m": 2
+    },
+    {
+      "uids": [
+        469,
+        471
+      ],
+      "distance_m": 8
+    },
+    {
+      "uids": [
+        65,
+        73
+      ],
+      "distance_m": 1
+    },
+    {
+      "uids": [
+        734,
+        842,
+        889
+      ],
+      "distance_m": 16
+    },
+    {
+      "uids": [
+        783,
+        910
+      ],
+      "distance_m": 32
+    },
+    {
+      "uids": [
+        806,
+        812
+      ],
+      "distance_m": 16
+    },
+    {
+      "uids": [
+        829,
+        909
+      ],
+      "distance_m": 16
+    }
+  ],
+  "still_rejected_groups": [
+    [
+      263,
+      273
+    ],
+    [
+      455,
+      494
+    ],
+    [
+      459,
+      490
+    ],
+    [
+      988,
+      990
+    ]
+  ],
+  "minimal_false_cycle": {
+    "serial_reservation": "both rejected against old infinite holds",
+    "joint_reservation": "accepted",
+    "continuous_minimum_distance_m": 14.142135623730951,
+    "required_distance_m": 8
+  },
+  "limitations": "Partial group movement alone does not prove eventual arrival. Preventive whole-flight traffic forecasting or further certified route control is needed for unresolved traps.",
+  "focused_verification": "22 passed: tests/enhanced/test_joint_reservations.py plus tests/enhanced/test_prefix_reservations.py"
+}

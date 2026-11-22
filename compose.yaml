@@ -1,0 +1,772 @@
+x-region-build: &region-build
+  context: .
+  dockerfile: region_image/Dockerfile
+
+x-region-health: &region-health
+  test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} && curl -fsS http://127.0.0.1:8080/health >/dev/null"]
+  interval: 3s
+  timeout: 5s
+  retries: 80
+  start_period: 15s
+
+x-region-environment: &region-environment
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  REGION_DT_PORT: 8080
+  REGION_DATA_DIR: /region_data/current
+  REGION_OUTPUT_DIR: /app/data
+
+services:
+  region-dt-01:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-01
+    hostname: region-dt-01
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_01
+      REGION_ID: 1
+      REGION_PUBLIC_URL: http://region-dt-01:8080
+    ports: ["15431:5432", "18101:8080"]
+    volumes:
+      - region-01-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_001:/region_data/current:ro
+      - ./output/region_01:/app/data
+    healthcheck: *region-health
+
+  region-dt-02:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-02
+    hostname: region-dt-02
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_02
+      REGION_ID: 2
+      REGION_PUBLIC_URL: http://region-dt-02:8080
+    ports: ["15432:5432", "18102:8080"]
+    volumes:
+      - region-02-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_002:/region_data/current:ro
+      - ./output/region_02:/app/data
+    healthcheck: *region-health
+
+  region-dt-03:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-03
+    hostname: region-dt-03
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_03
+      REGION_ID: 3
+      REGION_PUBLIC_URL: http://region-dt-03:8080
+    ports: ["15433:5432", "18103:8080"]
+    volumes:
+      - region-03-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_003:/region_data/current:ro
+      - ./output/region_03:/app/data
+    healthcheck: *region-health
+
+  region-dt-04:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-04
+    hostname: region-dt-04
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_04
+      REGION_ID: 4
+      REGION_PUBLIC_URL: http://region-dt-04:8080
+    ports: ["15434:5432", "18104:8080"]
+    volumes:
+      - region-04-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_004:/region_data/current:ro
+      - ./output/region_04:/app/data
+    healthcheck: *region-health
+
+  region-dt-05:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-05
+    hostname: region-dt-05
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_05
+      REGION_ID: 5
+      REGION_PUBLIC_URL: http://region-dt-05:8080
+    ports: ["15435:5432", "18105:8080"]
+    volumes:
+      - region-05-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_005:/region_data/current:ro
+      - ./output/region_05:/app/data
+    healthcheck: *region-health
+
+  region-dt-06:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-06
+    hostname: region-dt-06
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_06
+      REGION_ID: 6
+      REGION_PUBLIC_URL: http://region-dt-06:8080
+    ports: ["15436:5432", "18106:8080"]
+    volumes:
+      - region-06-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_006:/region_data/current:ro
+      - ./output/region_06:/app/data
+    healthcheck: *region-health
+
+  region-dt-07:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-07
+    hostname: region-dt-07
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_07
+      REGION_ID: 7
+      REGION_PUBLIC_URL: http://region-dt-07:8080
+    ports: ["15437:5432", "18107:8080"]
+    volumes:
+      - region-07-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_007:/region_data/current:ro
+      - ./output/region_07:/app/data
+    healthcheck: *region-health
+
+  region-dt-08:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-08
+    hostname: region-dt-08
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_08
+      REGION_ID: 8
+      REGION_PUBLIC_URL: http://region-dt-08:8080
+    ports: ["15438:5432", "18108:8080"]
+    volumes:
+      - region-08-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_008:/region_data/current:ro
+      - ./output/region_08:/app/data
+    healthcheck: *region-health
+
+  region-dt-09:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-09
+    hostname: region-dt-09
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_09
+      REGION_ID: 9
+      REGION_PUBLIC_URL: http://region-dt-09:8080
+    ports: ["15439:5432", "18109:8080"]
+    volumes:
+      - region-09-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_009:/region_data/current:ro
+      - ./output/region_09:/app/data
+    healthcheck: *region-health
+
+  region-dt-10:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-10
+    hostname: region-dt-10
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_10
+      REGION_ID: 10
+      REGION_PUBLIC_URL: http://region-dt-10:8080
+    ports: ["15440:5432", "18110:8080"]
+    volumes:
+      - region-10-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_010:/region_data/current:ro
+      - ./output/region_10:/app/data
+    healthcheck: *region-health
+
+  region-dt-11:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-11
+    hostname: region-dt-11
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_11
+      REGION_ID: 11
+      REGION_PUBLIC_URL: http://region-dt-11:8080
+    ports: ["15441:5432", "18111:8080"]
+    volumes:
+      - region-11-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_011:/region_data/current:ro
+      - ./output/region_11:/app/data
+    healthcheck: *region-health
+
+  region-dt-12:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-12
+    hostname: region-dt-12
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_12
+      REGION_ID: 12
+      REGION_PUBLIC_URL: http://region-dt-12:8080
+    ports: ["15442:5432", "18112:8080"]
+    volumes:
+      - region-12-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_012:/region_data/current:ro
+      - ./output/region_12:/app/data
+    healthcheck: *region-health
+
+  region-dt-13:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-13
+    hostname: region-dt-13
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_13
+      REGION_ID: 13
+      REGION_PUBLIC_URL: http://region-dt-13:8080
+    ports: ["15443:5432", "18113:8080"]
+    volumes:
+      - region-13-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_013:/region_data/current:ro
+      - ./output/region_13:/app/data
+    healthcheck: *region-health
+
+  region-dt-14:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-14
+    hostname: region-dt-14
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_14
+      REGION_ID: 14
+      REGION_PUBLIC_URL: http://region-dt-14:8080
+    ports: ["15444:5432", "18114:8080"]
+    volumes:
+      - region-14-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_014:/region_data/current:ro
+      - ./output/region_14:/app/data
+    healthcheck: *region-health
+
+  region-dt-15:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-15
+    hostname: region-dt-15
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_15
+      REGION_ID: 15
+      REGION_PUBLIC_URL: http://region-dt-15:8080
+    ports: ["15445:5432", "18115:8080"]
+    volumes:
+      - region-15-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_015:/region_data/current:ro
+      - ./output/region_15:/app/data
+    healthcheck: *region-health
+
+  region-dt-16:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-16
+    hostname: region-dt-16
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_16
+      REGION_ID: 16
+      REGION_PUBLIC_URL: http://region-dt-16:8080
+    ports: ["15446:5432", "18116:8080"]
+    volumes:
+      - region-16-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_016:/region_data/current:ro
+      - ./output/region_16:/app/data
+    healthcheck: *region-health
+
+  region-dt-17:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-17
+    hostname: region-dt-17
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_17
+      REGION_ID: 17
+      REGION_PUBLIC_URL: http://region-dt-17:8080
+    ports: ["15447:5432", "18117:8080"]
+    volumes:
+      - region-17-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_017:/region_data/current:ro
+      - ./output/region_17:/app/data
+    healthcheck: *region-health
+
+  region-dt-18:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-18
+    hostname: region-dt-18
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_18
+      REGION_ID: 18
+      REGION_PUBLIC_URL: http://region-dt-18:8080
+    ports: ["15448:5432", "18118:8080"]
+    volumes:
+      - region-18-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_018:/region_data/current:ro
+      - ./output/region_18:/app/data
+    healthcheck: *region-health
+
+  region-dt-19:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-19
+    hostname: region-dt-19
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_19
+      REGION_ID: 19
+      REGION_PUBLIC_URL: http://region-dt-19:8080
+    ports: ["15449:5432", "18119:8080"]
+    volumes:
+      - region-19-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_019:/region_data/current:ro
+      - ./output/region_19:/app/data
+    healthcheck: *region-health
+
+  region-dt-20:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-20
+    hostname: region-dt-20
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_20
+      REGION_ID: 20
+      REGION_PUBLIC_URL: http://region-dt-20:8080
+    ports: ["15450:5432", "18120:8080"]
+    volumes:
+      - region-20-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_020:/region_data/current:ro
+      - ./output/region_20:/app/data
+    healthcheck: *region-health
+
+  region-dt-21:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-21
+    hostname: region-dt-21
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_21
+      REGION_ID: 21
+      REGION_PUBLIC_URL: http://region-dt-21:8080
+    ports: ["15451:5432", "18121:8080"]
+    volumes:
+      - region-21-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_021:/region_data/current:ro
+      - ./output/region_21:/app/data
+    healthcheck: *region-health
+
+  region-dt-22:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-22
+    hostname: region-dt-22
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_22
+      REGION_ID: 22
+      REGION_PUBLIC_URL: http://region-dt-22:8080
+    ports: ["15452:5432", "18122:8080"]
+    volumes:
+      - region-22-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_022:/region_data/current:ro
+      - ./output/region_22:/app/data
+    healthcheck: *region-health
+
+  region-dt-23:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-23
+    hostname: region-dt-23
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_23
+      REGION_ID: 23
+      REGION_PUBLIC_URL: http://region-dt-23:8080
+    ports: ["15453:5432", "18123:8080"]
+    volumes:
+      - region-23-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_023:/region_data/current:ro
+      - ./output/region_23:/app/data
+    healthcheck: *region-health
+
+  region-dt-24:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-24
+    hostname: region-dt-24
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_24
+      REGION_ID: 24
+      REGION_PUBLIC_URL: http://region-dt-24:8080
+    ports: ["15454:5432", "18124:8080"]
+    volumes:
+      - region-24-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_024:/region_data/current:ro
+      - ./output/region_24:/app/data
+    healthcheck: *region-health
+
+  region-dt-25:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-25
+    hostname: region-dt-25
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_25
+      REGION_ID: 25
+      REGION_PUBLIC_URL: http://region-dt-25:8080
+    ports: ["15455:5432", "18125:8080"]
+    volumes:
+      - region-25-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_025:/region_data/current:ro
+      - ./output/region_25:/app/data
+    healthcheck: *region-health
+
+  region-dt-26:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-26
+    hostname: region-dt-26
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_26
+      REGION_ID: 26
+      REGION_PUBLIC_URL: http://region-dt-26:8080
+    ports: ["15456:5432", "18126:8080"]
+    volumes:
+      - region-26-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_026:/region_data/current:ro
+      - ./output/region_26:/app/data
+    healthcheck: *region-health
+
+  region-dt-27:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-27
+    hostname: region-dt-27
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_27
+      REGION_ID: 27
+      REGION_PUBLIC_URL: http://region-dt-27:8080
+    ports: ["15457:5432", "18127:8080"]
+    volumes:
+      - region-27-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_027:/region_data/current:ro
+      - ./output/region_27:/app/data
+    healthcheck: *region-health
+
+  region-dt-28:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-28
+    hostname: region-dt-28
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_28
+      REGION_ID: 28
+      REGION_PUBLIC_URL: http://region-dt-28:8080
+    ports: ["15458:5432", "18128:8080"]
+    volumes:
+      - region-28-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_028:/region_data/current:ro
+      - ./output/region_28:/app/data
+    healthcheck: *region-health
+
+  region-dt-29:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-29
+    hostname: region-dt-29
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_29
+      REGION_ID: 29
+      REGION_PUBLIC_URL: http://region-dt-29:8080
+    ports: ["15459:5432", "18129:8080"]
+    volumes:
+      - region-29-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_029:/region_data/current:ro
+      - ./output/region_29:/app/data
+    healthcheck: *region-health
+
+  region-dt-30:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-30
+    hostname: region-dt-30
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_30
+      REGION_ID: 30
+      REGION_PUBLIC_URL: http://region-dt-30:8080
+    ports: ["15460:5432", "18130:8080"]
+    volumes:
+      - region-30-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_030:/region_data/current:ro
+      - ./output/region_30:/app/data
+    healthcheck: *region-health
+
+  region-dt-31:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-31
+    hostname: region-dt-31
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_31
+      REGION_ID: 31
+      REGION_PUBLIC_URL: http://region-dt-31:8080
+    ports: ["15461:5432", "18131:8080"]
+    volumes:
+      - region-31-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_031:/region_data/current:ro
+      - ./output/region_31:/app/data
+    healthcheck: *region-health
+
+  region-dt-32:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-32
+    hostname: region-dt-32
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_32
+      REGION_ID: 32
+      REGION_PUBLIC_URL: http://region-dt-32:8080
+    ports: ["15462:5432", "18132:8080"]
+    volumes:
+      - region-32-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_032:/region_data/current:ro
+      - ./output/region_32:/app/data
+    healthcheck: *region-health
+
+  region-dt-33:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-33
+    hostname: region-dt-33
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_33
+      REGION_ID: 33
+      REGION_PUBLIC_URL: http://region-dt-33:8080
+    ports: ["15463:5432", "18133:8080"]
+    volumes:
+      - region-33-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_033:/region_data/current:ro
+      - ./output/region_33:/app/data
+    healthcheck: *region-health
+
+  region-dt-34:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-34
+    hostname: region-dt-34
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_34
+      REGION_ID: 34
+      REGION_PUBLIC_URL: http://region-dt-34:8080
+    ports: ["15464:5432", "18134:8080"]
+    volumes:
+      - region-34-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_034:/region_data/current:ro
+      - ./output/region_34:/app/data
+    healthcheck: *region-health
+
+  region-dt-35:
+    build: *region-build
+    image: airway-region-dt:dev
+    container_name: region-dt-35
+    hostname: region-dt-35
+    restart: unless-stopped
+    environment:
+      <<: *region-environment
+      POSTGRES_DB: region_35
+      REGION_ID: 35
+      REGION_PUBLIC_URL: http://region-dt-35:8080
+    ports: ["15465:5432", "18135:8080"]
+    volumes:
+      - region-35-pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./region_data/region_035:/region_data/current:ro
+      - ./output/region_35:/app/data
+    healthcheck: *region-health
+
+  simulation-coordinator:
+    build:
+      context: .
+      dockerfile: coordinator_image/Dockerfile
+    image: airway-simulation-coordinator:dev
+    container_name: simulation-coordinator
+    hostname: simulation-coordinator
+    restart: unless-stopped
+    ports: ["18080:8080"]
+    depends_on:
+      region-dt-01: {condition: service_healthy}
+      region-dt-02: {condition: service_healthy}
+      region-dt-03: {condition: service_healthy}
+      region-dt-04: {condition: service_healthy}
+      region-dt-05: {condition: service_healthy}
+      region-dt-06: {condition: service_healthy}
+      region-dt-07: {condition: service_healthy}
+      region-dt-08: {condition: service_healthy}
+      region-dt-09: {condition: service_healthy}
+      region-dt-10: {condition: service_healthy}
+      region-dt-11: {condition: service_healthy}
+      region-dt-12: {condition: service_healthy}
+      region-dt-13: {condition: service_healthy}
+      region-dt-14: {condition: service_healthy}
+      region-dt-15: {condition: service_healthy}
+      region-dt-16: {condition: service_healthy}
+      region-dt-17: {condition: service_healthy}
+      region-dt-18: {condition: service_healthy}
+      region-dt-19: {condition: service_healthy}
+      region-dt-20: {condition: service_healthy}
+      region-dt-21: {condition: service_healthy}
+      region-dt-22: {condition: service_healthy}
+      region-dt-23: {condition: service_healthy}
+      region-dt-24: {condition: service_healthy}
+      region-dt-25: {condition: service_healthy}
+      region-dt-26: {condition: service_healthy}
+      region-dt-27: {condition: service_healthy}
+      region-dt-28: {condition: service_healthy}
+      region-dt-29: {condition: service_healthy}
+      region-dt-30: {condition: service_healthy}
+      region-dt-31: {condition: service_healthy}
+      region-dt-32: {condition: service_healthy}
+      region-dt-33: {condition: service_healthy}
+      region-dt-34: {condition: service_healthy}
+      region-dt-35: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  region-01-pgdata: {name: region-01-pgdata}
+  region-02-pgdata: {name: region-02-pgdata}
+  region-03-pgdata: {name: region-03-pgdata}
+  region-04-pgdata: {name: region-04-pgdata}
+  region-05-pgdata: {name: region-05-pgdata}
+  region-06-pgdata: {name: region-06-pgdata}
+  region-07-pgdata: {name: region-07-pgdata}
+  region-08-pgdata: {name: region-08-pgdata}
+  region-09-pgdata: {name: region-09-pgdata}
+  region-10-pgdata: {name: region-10-pgdata}
+  region-11-pgdata: {name: region-11-pgdata}
+  region-12-pgdata: {name: region-12-pgdata}
+  region-13-pgdata: {name: region-13-pgdata}
+  region-14-pgdata: {name: region-14-pgdata}
+  region-15-pgdata: {name: region-15-pgdata}
+  region-16-pgdata: {name: region-16-pgdata}
+  region-17-pgdata: {name: region-17-pgdata}
+  region-18-pgdata: {name: region-18-pgdata}
+  region-19-pgdata: {name: region-19-pgdata}
+  region-20-pgdata: {name: region-20-pgdata}
+  region-21-pgdata: {name: region-21-pgdata}
+  region-22-pgdata: {name: region-22-pgdata}
+  region-23-pgdata: {name: region-23-pgdata}
+  region-24-pgdata: {name: region-24-pgdata}
+  region-25-pgdata: {name: region-25-pgdata}
+  region-26-pgdata: {name: region-26-pgdata}
+  region-27-pgdata: {name: region-27-pgdata}
+  region-28-pgdata: {name: region-28-pgdata}
+  region-29-pgdata: {name: region-29-pgdata}
+  region-30-pgdata: {name: region-30-pgdata}
+  region-31-pgdata: {name: region-31-pgdata}
+  region-32-pgdata: {name: region-32-pgdata}
+  region-33-pgdata: {name: region-33-pgdata}
+  region-34-pgdata: {name: region-34-pgdata}
+  region-35-pgdata: {name: region-35-pgdata}
+

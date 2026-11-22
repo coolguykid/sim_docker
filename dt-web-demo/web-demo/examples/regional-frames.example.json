@@ -1,0 +1,317 @@
+[
+  {
+    "schemaVersion": "regional-simulation-draft-0.1",
+    "type": "snapshot",
+    "requestId": "example-request-1",
+    "runId": "example-run-001",
+    "streamId": "example-stream-15-001",
+    "scope": {
+      "type": "region",
+      "regionId": "15"
+    },
+    "topologyVersion": "example-topology-001",
+    "snapshotId": "example-run-001:15:1",
+    "seq": 1,
+    "step": 0,
+    "simulationTimeSeconds": 0,
+    "simulationTime": "2026-10-20T02:00:00.000Z",
+    "sampleTime": "2026-10-20T02:00:00.000Z",
+    "serverTime": "2026-10-20T02:01:01.000Z",
+    "quality": {
+      "source": "mock",
+      "complete": true,
+      "missingObjects": []
+    },
+    "data": {
+      "runStatus": "running",
+      "state": {
+        "pipes": [
+          {
+            "pipeId": "P1",
+            "uavNumber": 2,
+            "averageSpeed": 6.795084971874737,
+            "isOpen": true,
+            "flow": null,
+            "density": null,
+            "maxCapacity": null,
+            "speedLimit": null,
+            "safeDistance": null
+          },
+          {
+            "pipeId": "P2",
+            "uavNumber": 0,
+            "averageSpeed": null,
+            "isOpen": true,
+            "flow": null,
+            "density": null,
+            "maxCapacity": null,
+            "speedLimit": null,
+            "safeDistance": null
+          }
+        ],
+        "ramps": [
+          {
+            "rampId": "RAMP1",
+            "isOpen": true,
+            "uavNumber": 0,
+            "averageSpeed": null
+          }
+        ],
+        "uavCoverage": {
+          "mode": "full",
+          "scope": "region",
+          "total": 2,
+          "returned": 2
+        },
+        "uavs": [
+          {
+            "uavId": "U1",
+            "regionId": "15",
+            "position": [
+              100,
+              0,
+              200
+            ],
+            "speed": 5.5901699437494745,
+            "phase": "pipe",
+            "location": {
+              "type": "pipe",
+              "objectId": "P1"
+            },
+            "laneId": "LANE1"
+          },
+          {
+            "uavId": "U2",
+            "regionId": "15",
+            "position": [
+              10,
+              0,
+              200
+            ],
+            "speed": 8,
+            "phase": "pipe",
+            "location": {
+              "type": "pipe",
+              "objectId": "P1"
+            },
+            "laneId": "LANE1"
+          }
+        ],
+        "summary": null
+      },
+      "predictions": null,
+      "strategies": null,
+      "performance": null
+    }
+  },
+  {
+    "schemaVersion": "regional-simulation-draft-0.1",
+    "type": "snapshot",
+    "requestId": "example-request-2",
+    "runId": "example-run-001",
+    "streamId": "example-stream-15-001",
+    "scope": {
+      "type": "region",
+      "regionId": "15"
+    },
+    "topologyVersion": "example-topology-001",
+    "snapshotId": "example-run-001:15:2",
+    "seq": 2,
+    "step": 4,
+    "simulationTimeSeconds": 2,
+    "simulationTime": "2026-10-20T02:00:02.000Z",
+    "sampleTime": "2026-10-20T02:00:02.000Z",
+    "serverTime": "2026-10-20T02:01:02.000Z",
+    "quality": {
+      "source": "mock",
+      "complete": true,
+      "missingObjects": []
+    },
+    "data": {
+      "runStatus": "running",
+      "state": {
+        "pipes": [
+          {
+            "pipeId": "P1",
+            "uavNumber": 1,
+            "averageSpeed": 8,
+            "isOpen": true,
+            "flow": null,
+            "density": null,
+            "maxCapacity": null,
+            "speedLimit": null,
+            "safeDistance": null
+          },
+          {
+            "pipeId": "P2",
+            "uavNumber": 0,
+            "averageSpeed": null,
+            "isOpen": true,
+            "flow": null,
+            "density": null,
+            "maxCapacity": null,
+            "speedLimit": null,
+            "safeDistance": null
+          }
+        ],
+        "ramps": [
+          {
+            "rampId": "RAMP1",
+            "isOpen": true,
+            "uavNumber": 1,
+            "averageSpeed": 5.5901699437494745
+          }
+        ],
+        "uavCoverage": {
+          "mode": "full",
+          "scope": "region",
+          "total": 2,
+          "returned": 2
+        },
+        "uavs": [
+          {
+            "uavId": "U1",
+            "regionId": "15",
+            "position": [
+              105,
+              0,
+              210
+            ],
+            "speed": 5.5901699437494745,
+            "phase": "ramp",
+            "location": {
+              "type": "ramp",
+              "objectId": "RAMP1"
+            },
+            "laneId": null
+          },
+          {
+            "uavId": "U2",
+            "regionId": "15",
+            "position": [
+              26,
+              0,
+              200
+            ],
+            "speed": 8,
+            "phase": "pipe",
+            "location": {
+              "type": "pipe",
+              "objectId": "P1"
+            },
+            "laneId": "LANE1"
+          }
+        ],
+        "summary": null
+      },
+      "predictions": null,
+      "strategies": null,
+      "performance": null
+    }
+  },
+  {
+    "schemaVersion": "regional-simulation-draft-0.1",
+    "type": "snapshot",
+    "requestId": "example-request-3",
+    "runId": "example-run-001",
+    "streamId": "example-stream-15-001",
+    "scope": {
+      "type": "region",
+      "regionId": "15"
+    },
+    "topologyVersion": "example-topology-001",
+    "snapshotId": "example-run-001:15:3",
+    "seq": 3,
+    "step": 8,
+    "simulationTimeSeconds": 4,
+    "simulationTime": "2026-10-20T02:00:04.000Z",
+    "sampleTime": "2026-10-20T02:00:04.000Z",
+    "serverTime": "2026-10-20T02:01:03.000Z",
+    "quality": {
+      "source": "mock",
+      "complete": true,
+      "missingObjects": []
+    },
+    "data": {
+      "runStatus": "running",
+      "state": {
+        "pipes": [
+          {
+            "pipeId": "P1",
+            "uavNumber": 1,
+            "averageSpeed": 8,
+            "isOpen": true,
+            "flow": null,
+            "density": null,
+            "maxCapacity": null,
+            "speedLimit": null,
+            "safeDistance": null
+          },
+          {
+            "pipeId": "P2",
+            "uavNumber": 1,
+            "averageSpeed": 5.5901699437494745,
+            "isOpen": true,
+            "flow": null,
+            "density": null,
+            "maxCapacity": null,
+            "speedLimit": null,
+            "safeDistance": null
+          }
+        ],
+        "ramps": [
+          {
+            "rampId": "RAMP1",
+            "isOpen": true,
+            "uavNumber": 0,
+            "averageSpeed": null
+          }
+        ],
+        "uavCoverage": {
+          "mode": "full",
+          "scope": "region",
+          "total": 2,
+          "returned": 2
+        },
+        "uavs": [
+          {
+            "uavId": "U1",
+            "regionId": "15",
+            "position": [
+              100,
+              0,
+              220
+            ],
+            "speed": 5.5901699437494745,
+            "phase": "pipe",
+            "location": {
+              "type": "pipe",
+              "objectId": "P2"
+            },
+            "laneId": "LANE2"
+          },
+          {
+            "uavId": "U2",
+            "regionId": "15",
+            "position": [
+              42,
+              0,
+              200
+            ],
+            "speed": 8,
+            "phase": "pipe",
+            "location": {
+              "type": "pipe",
+              "objectId": "P1"
+            },
+            "laneId": "LANE1"
+          }
+        ],
+        "summary": null
+      },
+      "predictions": null,
+      "strategies": null,
+      "performance": null
+    }
+  }
+]

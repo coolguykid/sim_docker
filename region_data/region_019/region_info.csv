@@ -1,0 +1,2 @@
+﻿region_id,bandwidth,computing_resource,load,neighbourhood,region_range
+19,0.0,0.0,0.0,"{13,20,25}","{0.0,5000.0,15000.0,20000.0}"

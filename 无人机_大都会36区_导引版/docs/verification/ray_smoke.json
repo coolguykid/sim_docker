@@ -1,0 +1,74 @@
+[
+  {
+    "mode": "legacy_local",
+    "manifest": {
+      "schema_version": "uav_sim.manifest.v2",
+      "frame_schema_version": "uav_sim.frame.v2",
+      "run_id": "legacy_local",
+      "algorithm_id": "1",
+      "routing_mode": "DIJKSTRA",
+      "control_mode": "legacy_local",
+      "topology_profile": "legacy_dense_directed_v2",
+      "topology_source": "generated",
+      "topology_version": 0,
+      "pipeline_count": 60,
+      "ramp_count": 668,
+      "routing_node_count": 1456,
+      "sim_dt_seconds": 1.0,
+      "frame_count": 5,
+      "last_complete_turn": 4,
+      "complete": true,
+      "error": null,
+      "estimated_required_bytes": 18487321,
+      "free_bytes_at_start": 237339348992
+    }
+  },
+  {
+    "mode": "centralized_route",
+    "manifest": {
+      "schema_version": "uav_sim.manifest.v2",
+      "frame_schema_version": "uav_sim.frame.v2",
+      "run_id": "centralized_route",
+      "algorithm_id": "1",
+      "routing_mode": "DIJKSTRA",
+      "control_mode": "centralized_route",
+      "topology_profile": "legacy_dense_directed_v2",
+      "topology_source": "generated",
+      "topology_version": 0,
+      "pipeline_count": 60,
+      "ramp_count": 668,
+      "routing_node_count": 1456,
+      "sim_dt_seconds": 1.0,
+      "frame_count": 5,
+      "last_complete_turn": 4,
+      "complete": true,
+      "error": null,
+      "estimated_required_bytes": 18487321,
+      "free_bytes_at_start": 236259184640
+    }
+  },
+  {
+    "mode": "server_authoritative",
+    "manifest": {
+      "schema_version": "uav_sim.manifest.v2",
+      "frame_schema_version": "uav_sim.frame.v2",
+      "run_id": "server_authoritative",
+      "algorithm_id": "1",
+      "routing_mode": "DIJKSTRA",
+      "control_mode": "server_authoritative",
+      "topology_profile": "legacy_dense_directed_v2",
+      "topology_source": "generated",
+      "topology_version": 0,
+      "pipeline_count": 60,
+      "ramp_count": 668,
+      "routing_node_count": 1456,
+      "sim_dt_seconds": 1.0,
+      "frame_count": 5,
+      "last_complete_turn": 4,
+      "complete": true,
+      "error": null,
+      "estimated_required_bytes": 18487321,
+      "free_bytes_at_start": 237014794240
+    }
+  }
+]

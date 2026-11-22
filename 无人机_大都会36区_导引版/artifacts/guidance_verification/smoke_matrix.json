@@ -1,0 +1,84 @@
+[
+  {
+    "mode": "centralized_full",
+    "dt_seconds": 1.0,
+    "arrived": 8,
+    "safety_violations": 0,
+    "hard_collisions": 0,
+    "guidance_policies": 77,
+    "guided_missions": 6,
+    "goal_error_m": 0.0,
+    "verified_regional_entries": 0,
+    "ray_worker_pids": [],
+    "last_arrival_seconds": 1752.0137570204122
+  },
+  {
+    "mode": "centralized_full",
+    "dt_seconds": 0.1,
+    "arrived": 8,
+    "safety_violations": 0,
+    "hard_collisions": 0,
+    "guidance_policies": 77,
+    "guided_missions": 6,
+    "goal_error_m": 0.0,
+    "verified_regional_entries": 0,
+    "ray_worker_pids": [],
+    "last_arrival_seconds": 1752.0137570204122
+  },
+  {
+    "mode": "centralized_regional",
+    "dt_seconds": 1.0,
+    "arrived": 8,
+    "safety_violations": 0,
+    "hard_collisions": 0,
+    "guidance_policies": 77,
+    "guided_missions": 6,
+    "goal_error_m": 0.0,
+    "verified_regional_entries": 108,
+    "ray_worker_pids": [],
+    "last_arrival_seconds": 1752.0137570204122
+  },
+  {
+    "mode": "centralized_regional",
+    "dt_seconds": 0.1,
+    "arrived": 8,
+    "safety_violations": 0,
+    "hard_collisions": 0,
+    "guidance_policies": 77,
+    "guided_missions": 6,
+    "goal_error_m": 0.0,
+    "verified_regional_entries": 108,
+    "ray_worker_pids": [],
+    "last_arrival_seconds": 1752.0137570204122
+  },
+  {
+    "mode": "onboard_regional",
+    "dt_seconds": 1.0,
+    "arrived": 8,
+    "safety_violations": 0,
+    "hard_collisions": 0,
+    "guidance_policies": 77,
+    "guided_missions": 6,
+    "goal_error_m": 0.0,
+    "verified_regional_entries": 108,
+    "ray_worker_pids": [
+      32260
+    ],
+    "last_arrival_seconds": 1752.0137570204122
+  },
+  {
+    "mode": "onboard_regional",
+    "dt_seconds": 0.1,
+    "arrived": 8,
+    "safety_violations": 0,
+    "hard_collisions": 0,
+    "guidance_policies": 77,
+    "guided_missions": 6,
+    "goal_error_m": 0.0,
+    "verified_regional_entries": 108,
+    "ray_worker_pids": [
+      3384
+    ],
+    "last_arrival_seconds": 1752.0137570204122
+  }
+]

@@ -1,0 +1,33 @@
+airspace_source: generated
+airspace_mode: metropolis
+log_dir: artifacts/logs
+report_dir: artifacts/reports
+enable_kl_divergence: false
+enable_channel_gain: false
+frame_export_enabled: false
+run_output_root: artifacts/runs
+parallelism_level: 300
+topology_profile: metropolis_partition_v1
+num_uavs: 10000
+num_pipes_per_layer: 50
+num_lanes_per_pipe: 20
+num_pickup_points: 0
+routing_mode: centralized_full
+sim_dt_seconds: 1.0
+replenishment_period_seconds: 100.0
+max_batch_size: 1000
+destination_count: 10
+destination_policy: fixed
+destination_mode: random
+random_seed: 42
+database:
+  host_env: UAV_SIM_DB_HOST
+  port: 5432
+  database_env: UAV_SIM_DB_NAME
+  user_env: UAV_SIM_DB_USER
+  password_env: UAV_SIM_DB_PASSWORD
+  schema: public
+  strict_validation: true
+  derive_lane_width_from_pipe_width: true
+  ramp_poll_interval_turns: 1
+  fallback_to_generated: false

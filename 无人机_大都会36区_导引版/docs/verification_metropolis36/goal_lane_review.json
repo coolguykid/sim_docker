@@ -1,0 +1,9 @@
+{
+  "checked_start_goal_pairs": 500,
+  "mismatches": [],
+  "goal_approach_max_length_m": 200.0,
+  "graph_nodes": 11703,
+  "graph_edges": 15691,
+  "physical_pipe_count": 300,
+  "wall_seconds": 2.0124343000000002
+}

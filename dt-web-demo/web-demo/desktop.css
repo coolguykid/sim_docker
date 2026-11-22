@@ -1,0 +1,119 @@
+/* Shared desktop shell. The DT surfaces own their data and local layouts. */
+:root {
+  color-scheme: light;
+  --dt-bg: #F4F3EE;
+  --dt-surface: #FFFEFA;
+  --dt-text: #233D34;
+  --dt-muted: #5D6C63;
+  --dt-border: #D9DFD4;
+  --dt-primary: #286452;
+  --dt-warning: #94621E;
+  --dt-danger: #AA5146;
+  --dt-space-1: 4px;
+  --dt-space-2: 8px;
+  --dt-space-3: 12px;
+  --dt-space-4: 16px;
+  --dt-space-6: 24px;
+  --text: var(--dt-text);
+  --muted: var(--dt-muted);
+  --line: var(--dt-border);
+}
+html { scroll-padding-bottom: 96px; }
+body { color: var(--dt-text); font: 14px/1.55 "Segoe UI", "Microsoft YaHei", sans-serif; }
+::selection { background: #CCE1D3; color: #173E30; }
+input, select, textarea { accent-color: var(--dt-primary); caret-color: var(--dt-primary); }
+* { scrollbar-width: thin; scrollbar-color: #B4C1B3 transparent; }
+button, select, input[type="search"] { border-radius: 6px; }
+button, select { min-height: 32px; font-size: 13px; }
+button { transition: background-color 160ms ease-out, border-color 160ms ease-out; }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 2px solid #316E91; outline-offset: 3px;
+}
+button:disabled, select:disabled { cursor: default; opacity: .55; }
+button[hidden], [hidden] { display: none !important; }
+svg.dt-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+body > header { height: 68px; padding: 0 28px; background: #FFFEFA; border-bottom-color: var(--dt-border); }
+.brand { gap: 12px; }
+.logo { width: 38px; height: 38px; border: 0; border-radius: 8px; background: var(--dt-primary); color: #FFFEFA; }
+.logo .dt-icon { width: 26px; height: 26px; }
+h1 { font-size: 18px; font-weight: 650; letter-spacing: .02em; }
+.brand .sub { font-size: 10px; letter-spacing: .1em; color: var(--dt-muted); }
+.header-right { gap: 16px; font-size: 12px; }
+.header-right .badge { font-size: 12px; padding: 4px 10px; }
+.header-right button { background: transparent; }
+.layout { grid-template-columns: 92px minmax(0, 1fr); }
+.layout > nav { align-self: start; position: sticky; top: 0; height: calc(100vh - 68px); padding: 24px 10px; gap: 12px; background: #EEEEE6; border-right-color: var(--dt-border); }
+.layout > nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; width: 70px; min-height: 72px; padding: 10px 4px; background: transparent; border-color: transparent; color: #5D6C63; font-size: 13px; }
+.layout > nav button.active { border-color: #B5CBB9; background: #E1EBDD; color: #245C46; font-weight: 650; }
+.layout > nav button:hover { background: #E7EBE1; }
+.nav-end { font-size: 10px; letter-spacing: .14em; opacity: .85; }
+.layout > main { padding: 20px 24px 0; max-width: 3000px; }
+.page-head { min-height: 60px; margin-bottom: 16px; align-items: center; }
+.page-head h2 { font-size: 25px; font-weight: 650; line-height: 1.35; letter-spacing: -.01em; text-wrap: balance; }
+.page-description { margin-top: 4px; color: var(--dt-muted); font-size: 13px; }
+.page-tools { gap: 8px; }
+.page-tools select { max-width: 200px; background: var(--dt-surface); }
+.page-tools #enterRegion { background: var(--dt-surface); }
+.badge { border-color: #CADAC5; }
+.mono { font-variant-numeric: tabular-nums; }
+.dt-icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.dt-chart-zoom {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: auto;
+  flex: 0 0 auto; min-height: 26px; padding: 2px 7px; border: 1px solid var(--dt-border);
+  border-radius: 4px; background: transparent; color: var(--dt-muted); font: 12px/1.4 "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+.dt-chart-zoom:hover { color: var(--dt-primary); background: #EEF3EA; border-color: #A0B8A4; }
+.dt-chart-zoom .dt-icon { width: 14px; height: 14px; }
+.dt-chart-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+.dt-chart-dialog {
+  width: min(1500px, 88vw); max-width: 88vw; height: min(940px, 85vh); max-height: 85vh;
+  padding: 0; border: 1px solid #B5C4B5; border-radius: 12px; overflow: hidden;
+  background: var(--dt-surface); color: var(--dt-text); box-shadow: 0 24px 100px #20362B40;
+}
+.dt-chart-dialog::backdrop { background: #1C302B99; backdrop-filter: none; }
+.dt-chart-dialog[open] { display: flex; flex-direction: column; }
+.dt-focus-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 22px; border-bottom: 1px solid var(--dt-border); }
+.dt-focus-header h2 { margin: 0; font-size: 20px; font-weight: 650; }
+.dt-focus-header button { background: transparent; }
+.dt-focus-description { margin: 0; padding: 12px 22px 0; color: var(--dt-muted); font-size: 13px; }
+.dt-focus-body { position: relative; flex: 1; min-height: 0; padding: 20px; }
+.dt-focus-body > .dt-chart-expanded { position: relative !important; width: 100% !important; height: 100% !important; min-height: 0 !important; padding: 0 !important; flex: 1; }
+.dt-focus-body canvas { display: block; position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+body.dt-focusing { overflow: hidden; }
+.dt-focus-placeholder { min-height: 100px; }
+dialog#about { width: 620px; max-width: 90vw; font-size: 15px; }
+dialog#about h3 { font-size: 21px; }
+dialog#about form { display: flex; justify-content: flex-end; margin-top: 20px; }
+dialog#about form button { background: var(--dt-primary); color: #FFFEFA; padding: 8px 20px; }
+@media (min-width: 2400px) {
+  .layout > main { padding: 24px 32px 0; }
+  .page-head { margin-bottom: 20px; }
+  .page-head h2 { font-size: 28px; }
+}
+@media (min-width: 3200px) {
+  body > header { height: 84px; padding: 0 40px; }
+  h1 { font-size: 22px; }
+  .header-right { font-size: 14px; }
+  .layout { grid-template-columns: 112px minmax(0, 1fr); }
+  .layout > nav { height: calc(100vh - 84px); }
+  .layout > nav button { width: 84px; min-height: 84px; font-size: 15px; }
+  .layout > nav .dt-icon { width: 26px; height: 26px; }
+  .layout > main { padding-top: 32px; }
+  .page-head h2 { font-size: 32px; }
+  .page-description, .page-tools select, .page-tools button { font-size: 15px; }
+  .page-head { margin-bottom: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+
+/* Compact graph tools leave the caption and plot height intact. */
+.cd-comparison-charts figure, .rd-comparison-charts figure { position: relative; }
+.cd-comparison-charts figcaption.dt-chart-heading, .rd-comparison-charts figcaption.dt-chart-heading { display: block; padding-right: 28px; min-height: 25px; }
+.cd-comparison-charts .dt-chart-zoom, .rd-comparison-charts .dt-chart-zoom { position: absolute; top: 0; right: 0; width: 24px; height: 24px; min-height: 24px; padding: 3px; margin: 0; }
+.cd-comparison-charts .dt-chart-zoom span, .rd-comparison-charts .dt-chart-zoom span { display: none; }
+
+/* The page title owns desktop orientation; the surface bar carries scope and controls. */
+body.center-mode:not(.center-slide) #centerDemo .cd-intro { padding: 0; min-height: 34px; border: 0; border-radius: 0; background: transparent; box-shadow: none; margin-bottom: 12px; }
+body.center-mode:not(.center-slide) #centerDemo .cd-intro .cd-title { display: none; }
+body.center-mode:not(.center-slide) #centerDemo .cd-intro .cd-note, body.center-mode:not(.center-slide) #centerDemo .cd-intro .cd-chips { margin: 0; }
+body.region-mode:not(.region-slide) #regionalDemo .rd-viewbar > div:first-child > strong { display: none; }
+body.region-mode:not(.region-slide) #regionalDemo .rd-viewbar > div:first-child > .rd-note { margin-left: 0; }

@@ -1,0 +1,172 @@
+// Run with Playwright CLI run-code --filename=web-demo/tests/verify-regional.cjs.
+async page => {
+  const report={date:'2026-10-21',checks:[],errors:[],externalRequests:[],screenshots:[],measurements:{}};
+  const check=(name,ok,evidence='')=>{report.checks.push({name,passed:!!ok,evidence});if(!ok)throw Error(name+': '+JSON.stringify(evidence));};
+  page.on('pageerror',e=>report.errors.push(String(e)));
+  page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
+  page.on('request',r=>{if(/^https?:/.test(r.url())&&!r.url().startsWith('http://127.0.0.1:8767/'))report.externalRequests.push(r.url());});
+  await page.route('**/regional.js',route=>route.continue({headers:{...route.request().headers(),'cache-control':'no-cache','pragma':'no-cache'}}));
+  await page.setViewportSize({width:1600,height:1100});
+  await page.goto('http://127.0.0.1:8767/?verify=20261021-direct-guides');
+  check('中心页初始可用',await page.locator('#pageTitle').innerText()==='中心数字孪生态势');
+  check('中心36×6热力图',await page.locator('.heat-cell').count()===216);
+  await page.locator('#playBtn').click();
+  await page.locator('[data-view=region]').click();
+  check('中心到区域切换',await page.locator('#regionalDemo').isVisible()&&!(await page.locator('.workspace').isVisible()));
+  const seek=async seconds=>{await page.locator('#rdTimeSlider').evaluate((el,t)=>{el.value=t;el.dispatchEvent(new Event('input',{bubbles:true}));},seconds);};
+  await seek(1200);
+  check('页面精确背景',await page.evaluate(()=>getComputedStyle(document.body).backgroundColor)==='rgb(244, 243, 238)');
+  let data=await page.evaluate(()=>({a:RegionDemo.inspect(),b:aggregate(S.region)}));
+  check('中心区域共用数量与加权速度',data.a.scope.n===data.b.n&&Math.abs(data.a.scope.speed-data.b.speed)<1e-10,{region:data.a.scope,center:data.b});
+  const geometry=await page.evaluate(()=>{
+    const os=[...RegionDemo.objects.values()],pipes=os.filter(o=>o.kind==='pipe'),sims=RegionDemo.streams().filter(s=>s.id.startsWith('SIM'));
+    const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));let gap=0,joins=0,travelError=0;
+    for(const s of sims)for(let i=1;i<s.segments.length;i++){
+      const before=s.segments[i-1],after=s.segments[i],time=s.start+after.offset,epsilon=.001;
+      gap=Math.max(gap,distance(before.g.at(1),after.g.at(0)));joins++;
+      const a=RegionDemo.inspect(time-epsilon).vehicles.find(v=>v.stream===s.id&&v.k===0),b=RegionDemo.inspect(time+epsilon).vehicles.find(v=>v.stream===s.id&&v.k===0);
+      if(!a||!b)travelError=Infinity;else travelError=Math.max(travelError,distance(a.position,b.position));
+    }
+    const unintended=[];for(const o of os.filter(o=>['in','out','ramp'].includes(o.kind)))for(const p of o.samples)for(const pipe of pipes){
+      if(pipe.id===o.pipe||o.kind==='ramp'&&(pipe.l===o.l||pipe.l===o.targetLayer)&&pipe.p===o.p||Math.abs(p[2]-pipe.height)>20)continue;const a=pipe.at(0),b=pipe.at(1),u=Math.max(0,Math.min(1,p.reduce((n,v,i)=>n+(v-a[i])*(b[i]-a[i]),0)/pipe.length**2));
+      if(distance(p,a.map((v,i)=>v+(b[i]-v)*u))<20-1e-7)unintended.push(o.id+' / '+pipe.id);
+    }
+    const nf=RegionDemo.inspect().config.noFly;let noFlyHits=0,negative=0,dupes=0,countMismatch=0,speedMismatch=0,zeroParticles=0;
+    for(let t=0;t<=3600;t+=30){const s=RegionDemo.inspect(t),seen=new Set();for(const v of s.vehicles){if(seen.has(v.id))dupes++;seen.add(v.id);const p=v.position;if(p[0]>=nf[0]&&p[0]<=nf[1]&&p[1]>=nf[2]&&p[1]<=nf[3]&&p[2]>=nf[4]&&p[2]<=nf[5])noFlyHits++;}
+      for(const o of pipes){const a=s.states[o.id],vs=s.vehicles.filter(v=>v.objectId===o.id);if(a.n<0)negative++;if(!a.missing&&a.n!==vs.length)countMismatch++;if(!a.missing&&a.n&&Math.abs(a.speed-vs.reduce((n,v)=>n+v.speed,0)/vs.length)>1e-9)speedMismatch++;if(a.n===0&&vs.length)zeroParticles++;}}
+    return {pipes:pipes.length,main:pipes.filter(o=>!o.reserve).length,reserve:pipes.filter(o=>o.reserve).length,layers:[...new Set(pipes.map(o=>o.height))],gap,joins,travelError,unintended:[...new Set(unintended)],noFlyHits,negative,dupes,countMismatch,speedMismatch,zeroParticles,chains:sims.map(s=>({id:s.id,stages:s.segments.map(x=>x.stage),duration:s.duration}))};
+  });
+  check('60管道/主备1:4/六层高度',geometry.pipes===60&&geometry.main===12&&geometry.reserve===48&&geometry.layers.join(',')==='135,265,395,525,655,785',geometry);
+  check('22组飞行流阶段连接端点连续',geometry.chains.length===22&&geometry.joins===168&&geometry.gap<1e-8,geometry.gap);
+  check('连接前后连续运动无瞬移',geometry.travelError<.03,geometry.travelError);
+  check('引路不穿入错误主干层',geometry.unintended.length===0,geometry.unintended);
+  check('全时段抽查无禁飞区轨迹',geometry.noFlyHits===0,'0–3600s，每30s检查全部模拟个体');
+  check('个体去重/归属与数量一致',!geometry.dupes&&!geometry.countMismatch&&!geometry.negative,geometry);
+  check('逐管道速度与个体正确加权',geometry.speedMismatch===0);
+  check('空对象没有粒子',geometry.zeroParticles===0);
+  check('汇入组覆盖自由飞/起飞/汇入/主干/层间转移',geometry.chains[0].stages.join('|')==='自由飞|起飞|汇入|主干|层间转移|主干',geometry.chains[0]);
+  check('汇出组覆盖主干/汇出/降落/自由飞',geometry.chains[1].stages.join('|')==='主干|汇出|降落|自由飞',geometry.chains[1]);
+  const guideTraffic=await page.evaluate(()=>{const guides=[...RegionDemo.objects.values()].filter(o=>['in','out','ramp'].includes(o.kind)),empty=[],mismatches=[];for(const t of [0,30,600,1200,1800,2700,3600]){const s=RegionDemo.inspect(t);for(const o of guides){const vs=s.vehicles.filter(v=>v.objectId===o.id),a=s.states[o.id];if(!vs.length)empty.push({t,id:o.id});if(a.n!==vs.length||a.n&&Math.abs(a.speed-vs.reduce((n,v)=>n+v.speed,0)/vs.length)>1e-9)mismatches.push({t,id:o.id});}}return {guides:guides.length,empty,mismatches};});
+  check('44条引路在起始中途末帧均有演示无人机',guideTraffic.guides===44&&!guideTraffic.empty.length,guideTraffic);
+  check('引路演示数量均速与真实个体一致',!guideTraffic.mismatches.length,guideTraffic.mismatches);
+  const eventAudit=await page.evaluate(()=>{let flowErrors=0,completionErrors=0,densityErrors=0;for(const t of [78,1200,1800,2700,3000]){const snap=RegionDemo.inspect(t),from=Math.max(0,t-60);let exitCount=0,completed=0;for(const s of RegionDemo.streams())for(let k=0;k<2000;k++){const start=s.start+k*s.interval;if(start>=s.end||start>t)break;const finish=start+s.duration;if(finish>=from&&finish<t)completed++;for(const seg of s.segments){const exit=start+seg.end;if(seg.id==='L1-P01'&&exit>=from&&exit<t)exitCount++;}}if(snap.states['L1-P01'].flow!==exitCount)flowErrors++;if(snap.completion.completed!==completed)completionErrors++;for(const o of RegionDemo.objects.values())if(o.kind==='pipe'){const a=snap.states[o.id];if(!a.missing&&Math.abs(a.density-a.n/(o.length/1000))>1e-10)densityErrors++;}}return {flowErrors,completionErrors,densityErrors};});
+  check('流量为60秒窗对象出口事件率',eventAudit.flowErrors===0,eventAudit);
+  check('任务完成吞吐独立去重而非管道流量合计',eventAudit.completionErrors===0,eventAudit);
+  check('密度按管道长度正确换算',eventAudit.densityErrors===0,eventAudit);
+  const exchangeAudit=await page.evaluate(()=>{const errors=[];for(const t of [60,600,1200,2700,3600]){const expected={in:0,out:0},from=t-60;for(const s of RegionDemo.streams())for(let k=0;s.start+k*s.interval<Math.min(s.end,t);k++)for(const seg of s.segments){const exit=s.start+k*s.interval+seg.end;if(exit>=from&&exit<t){if(seg.stage==='汇入')expected.in++;if(seg.stage==='降落')expected.out++;}}const actual=RegionDemo.inspect(t).completion;if(actual.in!==expected.in||actual.out!==expected.out)errors.push({t,expected,actual});}return errors;});
+  check('汇入降落统计覆盖全部新增演示任务',exchangeAudit.length===0,exchangeAudit);
+  report.measurements.geometry=geometry;
+  await page.locator('[data-object="TK-01"]').first().click();
+  check('漏斗可选且详情包含连接与尺寸',(await page.locator('#rdDetail').innerText()).includes('下口直径180m')&&(await page.locator('#rdDetail').innerText()).includes('FF-01 → TK-01 → 目标层汇入引路'));
+  await page.locator('[data-focus=overview]').click();
+  await page.locator('[data-rdlayer="2"]').click();
+  data=await page.evaluate(()=>RegionDemo.inspect());
+  check('单层筛选及清空旧选择',data.selected===null&&data.paths.filter(p=>p.id.startsWith('L3-P')).length===10);
+  check('单层保留层间连接上下文',data.paths.some(p=>p.id==='X-L2-L3')&&data.paths.some(p=>p.id==='L2-P01'));
+  check('单层同时保留上下行引路',data.paths.some(p=>p.id==='X-L3-L2')&&data.paths.some(p=>p.id==='X-L4-L3'));
+  await page.locator('#rdSearch').fill('X-L3-L2');await page.locator('#rdSearchGo').click();
+  check('下行引路可搜索选择且详情方向正确',await page.evaluate(()=>RegionDemo.inspect().selected==='X-L3-L2')&&(await page.locator('#rdDetail').innerText()).includes('L3-P01 @600m → L2-P01 @840m'));
+  await page.locator('#rdSearch').fill('');await page.locator('[data-rdlayer="2"]').click();
+  await page.locator('[data-rdlayer=all]').click();
+  const originalHeight=await page.evaluate(()=>RegionDemo.objects.get('L1-P01').height);
+  const beforeExpansion=await page.evaluate(()=>RegionDemo.inspect().paths.find(p=>p.id==='IN-L1').end);
+  await page.locator('#rdExpand').click();
+  const afterExpansion=await page.evaluate(()=>({height:RegionDemo.objects.get('L1-P01').height,guide:RegionDemo.inspect().paths.find(p=>p.id==='IN-L1').end,pipe:RegionDemo.project(RegionDemo.objects.get('L1-P01').at(.2))}));
+  check('展开仅改变显示且保持引路端点连接',originalHeight===afterExpansion.height&&Math.hypot(afterExpansion.guide.x-afterExpansion.pipe.x,afterExpansion.guide.y-afterExpansion.pipe.y)<1e-7);
+  await page.locator('#rdExpand').click();
+  for(const name of ['free','funnel','guide','ramp','noFly']){await page.locator(`[data-show=${name}]`).uncheck();await page.locator(`[data-show=${name}]`).check();}
+  check('全部显示开关可操作',await page.locator('[data-show]:checked').count()===5);
+  check('已移除航道展开勾选项',await page.locator('[data-show=lanes]').count()===0);
+  check('总览文字按钮与视角操作同行',await page.evaluate(()=>{const buttons=['rdExpand','rdReset','rdReplayConnection','rdLabels'].map(id=>document.getElementById(id));return buttons.every(b=>b.parentElement===buttons[0].parentElement&&Math.abs(b.getBoundingClientRect().top-buttons[0].getBoundingClientRect().top)<1);}));
+  const guideView=()=>page.evaluate(()=>{const s=RegionDemo.inspect();return {model:JSON.stringify({vehicles:s.vehicles,scope:s.scope,t:s.t}),paths:s.paths.filter(p=>['in','out','ramp'].includes(RegionDemo.objects.get(p.id).kind))};});
+  const compactGuides=await guideView();check('重点模式保留44条引路且背景清晰可辨',compactGuides.paths.length===44&&compactGuides.paths.every(p=>p.opacity===.35));
+  await page.locator('#rdGuideDetail').click();const allGuides=await guideView();
+  check('全部模式恢复连接且不改变模型',allGuides.model===compactGuides.model&&allGuides.paths.length===44&&allGuides.paths.every(p=>p.opacity===.85));
+  check('上下行引路使用独立颜色',allGuides.paths.find(p=>p.id==='X-L2-L1').color!==allGuides.paths.find(p=>p.id==='X-L1-L2').color);
+  await page.locator('#rdGuideDetail').click();await page.locator('#rdSearch').fill('X-L3-L2');await page.locator('#rdSearchGo').click();
+  const selectedGuide=await guideView();check('选中下行引路突出且背景淡化',selectedGuide.paths.find(p=>p.id==='X-L3-L2').opacity===1&&selectedGuide.paths.some(p=>p.opacity===.35));
+  await page.locator('#rdSearch').fill('');await page.locator('[data-rdlayer=all]').click();
+  const sceneText=()=>page.evaluate(()=>{const c=document.querySelector('#rdScene').getContext('2d'),original=c.fillText,texts=[];c.fillText=function(text,...args){texts.push(String(text));return original.call(this,text,...args);};try{RegionDemo.resize();}finally{c.fillText=original;}return texts;});
+  const noFlyView=()=>page.evaluate(()=>{const c=document.querySelector('#rdScene').getContext('2d'),original=c.fill,faces=[],palette=document.createElement('canvas').getContext('2d'),fills=['#B5665522','#B5665519','#B566551A'].map(color=>{palette.fillStyle=color;return palette.fillStyle;});c.fill=function(...args){if(fills.includes(c.fillStyle))faces.push(c.fillStyle);return original.apply(this,args);};try{RegionDemo.resize();}finally{c.fill=original;}const s=RegionDemo.inspect();return {faces:faces.length,model:JSON.stringify({vehicles:s.vehicles,scope:s.scope,selected:s.selected,paths:s.paths})};});
+  const noFlyShown=await noFlyView();check('模拟禁飞区默认显示体积与标注',noFlyShown.faces===3&&(await sceneText()).some(text=>text.includes('模拟禁飞区')));
+  await page.locator('[data-show=noFly]').uncheck();const noFlyHidden=await noFlyView();
+  check('关闭模拟禁飞区同时隐藏体积与标注',noFlyHidden.faces===0&&!(await sceneText()).some(text=>text.includes('模拟禁飞区')));
+  check('禁飞区显示开关保持模型轨迹统计与选择',noFlyShown.model===noFlyHidden.model);
+  await page.locator('[data-show=noFly]').check();check('重新开启恢复模拟禁飞区',(await noFlyView()).faces===3&&(await sceneText()).some(text=>text.includes('模拟禁飞区')));
+  const overviewText=await sceneText(),beforeLabels=await page.evaluate(()=>{const s=RegionDemo.inspect();return JSON.stringify({vehicles:s.vehicles,scope:s.scope,selected:s.selected,paths:s.paths});});
+  check('总览默认显示场景文字',overviewText.length>0&&await page.locator('#rdLabels').getAttribute('aria-pressed')==='true');
+  await page.locator('#rdLabels').click();
+  check('按钮隐藏总览场景全部标注',(await sceneText()).length===0&&await page.locator('#rdLabels').innerText()==='显示总览文字'&&await page.locator('#rdLabels').getAttribute('aria-pressed')==='false');
+  check('隐藏文字保持轨迹统计与选择',beforeLabels===await page.evaluate(()=>{const s=RegionDemo.inspect();return JSON.stringify({vehicles:s.vehicles,scope:s.scope,selected:s.selected,paths:s.paths});}));
+  await page.locator('[data-focus=in]').click();check('汇入特写仍显示文字',(await sceneText()).some(text=>text.includes('直达目标层')));
+  await page.locator('[data-focus=out]').click();check('汇出特写仍显示文字',(await sceneText()).some(text=>text.includes('目标层直达漏斗')));
+  await page.locator('[data-focus=overview]').click();check('返回总览保留隐藏设置',(await sceneText()).length===0);
+  await page.locator('#rdLabels').click();const restoredText=await sceneText();check('按钮恢复总览文字',overviewText.every(text=>restoredText.includes(text))&&await page.locator('#rdLabels').getAttribute('aria-pressed')==='true');
+  for(const metric of ['count','speed','density','utilization']){await page.locator('#rdMetric').selectOption(metric);check('着色指标 '+metric,(await page.locator('#rdLegend').innerText()).includes({count:'数量 架',speed:'平均速度 m/s',density:'密度 架/km管道',utilization:'容量利用率 %'}[metric]));}
+  await page.locator('#rdType').selectOption('reserve');check('备用类型筛选',await page.locator('.rd-rank').count()===48);
+  await page.locator('#rdOpen').selectOption('关闭');check('关闭状态筛选',await page.locator('.rd-rank').count()===48);
+  await page.locator('#rdType').selectOption('all');await page.locator('#rdOpen').selectOption('all');
+  await page.locator('#rdSearch').fill('L1-P01');check('ID搜索过滤',await page.locator('.rd-rank').count()===1);
+  await page.locator('#rdSearchGo').click();check('ID定位详情与曲线一致',(await page.locator('#rdDetail').getAttribute('data-object'))==='R15:L1-P01'&&(await page.locator('#rdChartTitle').innerText()).startsWith('L1-P01'));
+  await page.locator('[data-focus=in]').click();await page.locator('[data-object="L6-P01"]').first().click();check('特写中排序可定位其他层管道',await page.evaluate(()=>RegionDemo.inspect().selected==='L6-P01'&&RegionDemo.inspect().paths.some(p=>p.id==='L6-P01')));
+  await page.locator('[data-rdlayer="0"]').click();await page.locator('#rdSearch').fill('IN-L5-R');await page.locator('#rdSearchGo').click();check('跨层引路ID搜索显示正确分支',await page.evaluate(()=>RegionDemo.inspect().selected==='IN-L5-R'&&RegionDemo.inspect().paths.some(p=>p.id==='IN-L5-R')&&RegionDemo.inspect().paths.some(p=>p.id==='L5-P06')));
+  await page.locator('[data-rdlayer=all]').click();await page.locator('#rdSearch').fill('L1-P01');await page.locator('#rdSearchGo').click();
+  for(const m of ['speed','flow','density','count']){await page.locator(`[data-chart=${m}]`).click();check('所选对象图表指标 '+m,(await page.locator('#rdChartTitle').innerText()).includes({speed:'平均速度',flow:'出口流量',density:'密度',count:'数量'}[m]));}
+  await page.locator('#rdPrediction').uncheck();await page.locator('#rdPrediction').check();check('预测独立开关与起报时域',(await page.locator('#rdForecastNote').innerText()).includes('预测时域 180s'));
+  await page.locator('[data-demo=zero]').click();data=await page.evaluate(()=>RegionDemo.inspect());check('零数量均速null/无粒子',data.states['L4-P07'].n===0&&data.states['L4-P07'].speed===null&&!data.vehicles.some(v=>v.objectId==='L4-P07'));
+  await page.locator('[data-demo=missing]').click();data=await page.evaluate(()=>RegionDemo.inspect());check('缺失不补零且聚合排除',data.states['L3-P01'].n===null&&data.scope.missingCount===1&&(await page.locator('#rdDetail').innerText()).includes('模拟缺失'));
+  const gapDrawing=await page.evaluate(()=>{const canvas=document.querySelector('#rdHistory'),c=canvas.getContext('2d'),move=c.moveTo,stroke=c.stroke;let historyMoves=0,predictionDashed=false;c.moveTo=function(...args){if(this.strokeStyle.toLowerCase()==='#387d69')historyMoves++;return move.apply(this,args);};c.stroke=function(...args){if(this.strokeStyle.toLowerCase()==='#7556a0')predictionDashed=this.getLineDash().length>0;return stroke.apply(this,args);};const el=document.querySelector('#rdTimeSlider');el.value=1950;el.dispatchEvent(new Event('input',{bubbles:true}));c.moveTo=move;c.stroke=stroke;return {historyMoves,predictionDashed};});
+  check('缺失历史实际绘制为分离路径',gapDrawing.historyMoves>=2,gapDrawing);check('预测实际使用独立虚线',gapDrawing.predictionDashed);
+  await page.locator('#rdMore summary').click();check('评价未设计指标暂无数据',(await page.locator('#rdMore').innerText()).includes('冲突 / 近距越界：暂无数据'));
+  await page.locator('[data-demo=drain]').click();
+  const drain=await page.evaluate(()=>[2699,2700,2750,2850,3000].map(t=>{const s=RegionDemo.inspect(t);return {t,a:s.states['L1-P02'],ids:s.vehicles.filter(v=>v.objectId==='L1-P02').map(v=>v.id)};}));
+  check('备用先排空再关闭',drain[0].a.status==='开放'&&drain[1].a.status==='排空'&&drain[1].a.n>0&&drain.at(-1).a.status==='关闭'&&drain.at(-1).a.n===0,drain.map(x=>({t:x.t,n:x.a.n,status:x.a.status})));
+  check('排空期间不新增且在途不突然消失',drain[2].ids.every(id=>drain[1].ids.includes(id))&&drain[1].a.n<=drain[0].a.n+1);
+  await page.locator('#rdOpen').selectOption('排空');check('排空状态筛选',await page.locator('.rd-rank').count()===47);await page.locator('#rdOpen').selectOption('all');
+  await page.locator('#scenario').selectOption('peak');await seek(1200);
+  await page.locator('#rdLoad').selectOption('high');check('高负载筛选结果符合阈值',await page.locator('.rd-rank').count()>0&&await page.evaluate(()=>[...document.querySelectorAll('.rd-rank')].every(b=>RegionDemo.inspect().states[b.dataset.object].u>=.85)));await page.locator('#rdLoad').selectOption('all');
+  const paused=await page.evaluate(()=>JSON.stringify({t:S.t,vehicles:RegionDemo.inspect().vehicles,scope:RegionDemo.inspect().scope}));await page.waitForTimeout(450);
+  check('暂停位置/时间/统计保持一致',paused===await page.evaluate(()=>JSON.stringify({t:S.t,vehicles:RegionDemo.inspect().vehicles,scope:RegionDemo.inspect().scope})));
+  await seek(2400);await seek(1200);check('拖动回放确定性复现',paused===await page.evaluate(()=>JSON.stringify({t:S.t,vehicles:RegionDemo.inspect().vehicles,scope:RegionDemo.inspect().scope})));
+  await page.locator('#rdLatest').click();check('返回末帧且暂停',await page.evaluate(()=>S.t===60&&!S.playing));
+  await page.locator('#rdReplay').click();await page.waitForTimeout(400);check('重新播放恢复运动',await page.evaluate(()=>S.t>0&&S.t<1&&S.playing));await page.locator('#rdPlay').click();
+  await page.locator('#regionSelect').selectOption('15');check('切换区域清除旧选择',await page.evaluate(()=>RegionDemo.inspect().region==='R16'&&RegionDemo.inspect().selected===null));await page.locator('#regionSelect').selectOption('14');
+  await page.locator('[data-view=center]').click();check('区域返回中心可用',await page.locator('.workspace').isVisible()&&!(await page.locator('#regionalDemo').isVisible()));
+  await page.locator('[data-view=region]').click();await seek(1200);await page.locator('[data-focus=overview]').click();
+  const r=await page.locator('#rdScene').boundingBox(),projection=await page.evaluate(()=>RegionDemo.project([100,100,135]));
+  await page.mouse.move(r.x+r.width*.5,r.y+r.height*.5);await page.mouse.down();await page.mouse.move(r.x+r.width*.5+70,r.y+r.height*.5+5);await page.mouse.up();
+  check('拖动旋转投影变化',await page.evaluate(old=>{const p=RegionDemo.project([100,100,135]);return Math.hypot(p.x-old.x,p.y-old.y)>1;},projection));
+  await page.mouse.wheel(0,-150);await page.locator('#rdReset').click();
+  check('缩放后复位恢复投影',await page.evaluate(old=>{const p=RegionDemo.project([100,100,135]);return Math.hypot(p.x-old.x,p.y-old.y)<.01;},projection));
+  // A real canvas click, not only side-panel selection.
+  const point=await page.evaluate(()=>RegionDemo.project(RegionDemo.objects.get('TK-01').at(.5)));await page.mouse.click(r.x+point.x,r.y+point.y);
+  check('场景点击拾取漏斗',await page.evaluate(()=>RegionDemo.inspect().selected==='TK-01'));
+  await page.locator('[data-focus=overview]').click();await page.locator('[data-rdlayer="0"]').click();
+  const pipePoint=await page.evaluate(()=>RegionDemo.project(RegionDemo.objects.get('L1-P01').at(.55)));await page.mouse.click(r.x+pipePoint.x,r.y+pipePoint.y);
+  check('场景点击管道详情与图表联动',await page.evaluate(()=>RegionDemo.inspect().selected==='L1-P01')&&(await page.locator('#rdChartTitle').innerText()).startsWith('L1-P01'));
+  for(const scenario of ['normal','peak','reserve']){await page.locator('#scenario').selectOption(scenario);await seek(1200);check('场景 '+scenario,await page.evaluate(()=>RegionDemo.inspect().vehicles.length>0));}
+  await page.locator('#scenario').selectOption('peak');await page.locator('#rdRate').selectOption('60');
+  await page.evaluate(()=>{globalThis.__motionTrace=[];globalThis.__motionTimer=setInterval(()=>{const s=RegionDemo.inspect();__motionTrace.push({t:s.t,in:s.vehicles.find(v=>v.stream==='SIM-IN'&&v.k===0),out:s.vehicles.find(v=>v.stream==='SIM-OUT'&&v.k===0)});},80);});
+  await page.locator('#rdReplayConnection').click();await page.waitForTimeout(8500);await page.locator('#rdPlay').click();
+  const motion=await page.evaluate(()=>{clearInterval(__motionTimer);const phases={in:new Set(),out:new Set()};let maximumSpeed=0;for(let i=0;i<__motionTrace.length;i++){const cur=__motionTrace[i],prev=__motionTrace[i-1];for(const key of ['in','out'])if(cur[key]){phases[key].add(cur[key].stage);if(prev?.[key]&&cur.t>prev.t)maximumSpeed=Math.max(maximumSpeed,Math.hypot(...cur[key].position.map((v,k)=>v-prev[key].position[k]))/(cur.t-prev.t));}}return {phases:{in:[...phases.in],out:[...phases.out]},maximumSpeed,samples:__motionTrace.length,first:__motionTrace[0].t,last:__motionTrace.at(-1).t};});
+  check('真实动画播放覆盖完整汇入阶段',motion.phases.in.join('|')==='自由飞|起飞|汇入|主干|层间转移',motion);
+  check('真实动画播放覆盖完整汇出阶段',motion.phases.out.join('|')==='主干|汇出|降落|自由飞',motion);
+  check('实际播放轨迹连续且无额外瞬移',motion.maximumSpeed<=12.01&&motion.last>460,motion);report.measurements.motion=motion;
+  await page.locator('#rdRate').selectOption('15');
+  await page.locator('#scenario').selectOption('peak');await page.locator('[data-rdlayer=all]').click();await seek(1200);await page.locator('[data-focus=overview]').click();await page.evaluate(()=>scrollTo(0,0));
+  const shot=async(name,fullPage=false)=>{const path='web-demo/review/'+name+'.png';await page.screenshot({path,fullPage});report.screenshots.push(path);};
+  await shot('regional-overview',true);
+  await page.locator('[data-focus=in]').click();await seek(78);await page.evaluate(()=>scrollTo(0,0));await shot('regional-inflow',true);
+  await page.locator('[data-focus=out]').click();const landingTime=await page.evaluate(()=>{const s=RegionDemo.streams().find(s=>s.id==='SIM-OUT'),seg=s.segments.find(x=>x.id==='LD-01');return Math.round(s.start+seg.offset+seg.duration*.5);});await seek(landingTime);await page.evaluate(()=>scrollTo(0,0));await shot('regional-outflow',true);
+  await page.locator('[data-focus=overview]').click();await seek(1950);await page.locator('#rdSearch').fill('L3-P01');await page.locator('#rdSearchGo').click();await page.evaluate(()=>scrollTo(0,0));await shot('regional-selected-charts',true);
+  await page.locator('#rdSearch').fill('L1-P01');await page.locator('#rdSearchGo').click();await page.locator('[data-focus=in]').click();await seek(78);
+  for(const width of [360,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await page.waitForTimeout(60);const dims=await page.evaluate(()=>({viewport:innerWidth,width:document.documentElement.scrollWidth}));check('布局无横向溢出 '+width,dims.width<=dims.viewport,dims);}
+  await page.setViewportSize({width:390,height:844});await page.evaluate(()=>scrollTo(0,0));await shot('regional-mobile',true);
+  await page.screenshot({path:'output/playwright/regional-mobile-viewport.png'});
+  await page.setViewportSize({width:1600,height:1100});await page.locator('#rdMore').evaluate(el=>el.open=true);await page.locator('#rdRate').selectOption('60');await page.locator('#rdPlay').click();await page.waitForTimeout(2100);await page.locator('#rdPlay').click();
+  report.measurements.browser=await page.evaluate(()=>({userAgent:navigator.userAgent,screen:{w:innerWidth,h:innerHeight,dpr:devicePixelRatio},text:document.querySelector('#rdPerf').innerText,objects:RegionDemo.objects.size,individuals:RegionDemo.inspect().vehicles.length}));
+  await page.context().setOffline(true);await seek(300);await page.locator('[data-focus=out]').click();check('断网仍可回放交互',await page.evaluate(()=>RegionDemo.inspect().t===300));await page.context().setOffline(false);
+  check('当前版本JavaScript/控制台无错误',report.errors.length===0,report.errors);
+  check('无外部网络请求',report.externalRequests.length===0,report.externalRequests);
+  await page.evaluate(r=>globalThis.__regionalReport=r,report);
+}

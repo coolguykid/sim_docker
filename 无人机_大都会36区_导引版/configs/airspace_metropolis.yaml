@@ -1,0 +1,10 @@
+mode: metropolis
+side_length: 30000.0
+default_num_uavs: 10000
+default_max_turns: 18000
+region_rows: 6
+region_cols: 6
+num_pipes_per_layer: 50
+num_lanes_per_pipe: 20
+sim_dt_seconds: 1.0
+

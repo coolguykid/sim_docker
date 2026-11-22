@@ -1,0 +1,14 @@
+[
+  {
+    "uav_count": 20,
+    "turns": 100,
+    "description": "3 starting pipelines, 2 lanes, varied destinations and spawn times; channel gain enabled; result, all paths, trajectories and final states matched",
+    "sha256": "6df7b10322350ce9571cad939790d219d2a48396a707f6428c3e21c882dac360"
+  },
+  {
+    "uav_count": 8,
+    "turns": 250,
+    "description": "Pickup capacity, generated dynamic ramps, KL and channel gain enabled; results, trajectories, paths, final states and ramp states matched",
+    "sha256": "2d2938043f7898e7eb20c08037b6db850fc4c61703c36d55022ac313d178fddc"
+  }
+]

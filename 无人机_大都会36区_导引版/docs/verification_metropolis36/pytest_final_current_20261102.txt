@@ -1,0 +1,159 @@
+============================= test session starts =============================
+platform win32 -- Python 3.9.23, pytest-8.4.2, pluggy-1.6.0
+rootdir: D:\无人机_大都会36区_第一版增强
+configfile: pyproject.toml
+testpaths: tests
+collected 554 items
+
+tests\airspace\test_airspace_modes.py ...                                [  0%]
+tests\airspace\test_airspace_ramp_density.py ......                      [  1%]
+tests\airspace\test_cross_region_portals.py ...                          [  2%]
+tests\airspace\test_database_subpipe_graph.py ..                         [  2%]
+tests\airspace\test_database_topology_adapter.py .....                   [  3%]
+tests\airspace\test_directed_inter_layer_generation.py ...               [  3%]
+tests\airspace\test_directed_ramp_model.py ....                          [  4%]
+tests\airspace\test_region_airspace_objects.py ...                       [  5%]
+tests\airspace\test_region_graph.py ...                                  [  5%]
+tests\airspace\test_regional_airspace.py ...                             [  6%]
+tests\airspace\test_regional_snapshot_memory.py .                        [  6%]
+tests\airspace\test_sparse_ramp_topology.py ......                       [  7%]
+tests\algorithms\test_avoidance_actions.py ...                           [  8%]
+tests\algorithms\test_directed_ramp_routing.py .....                     [  9%]
+tests\algorithms\test_hierarchical_regional_dijkstra.py ............     [ 11%]
+tests\algorithms\test_motion_constraints.py ..........                   [ 12%]
+tests\algorithms\test_normalization_modes.py ..                          [ 13%]
+tests\algorithms\test_speed_aware_ramp_cost.py ..                        [ 13%]
+tests\compat\test_python39_compatibility.py ..                           [ 14%]
+tests\distributed\test_actor_snapshot_memory.py ...                      [ 14%]
+tests\distributed\test_centralized_routing.py .....                      [ 15%]
+tests\distributed\test_database_topology_route_planning.py .             [ 15%]
+tests\distributed\test_engine_runtime_env.py .                           [ 15%]
+tests\distributed\test_hierarchical_route_planning.py ..                 [ 16%]
+tests\distributed\test_metric_feature_flags.py ......                    [ 17%]
+tests\distributed\test_ramp_state_versioning.py ........                 [ 18%]
+tests\distributed\test_route_batch_coalescing.py ...                     [ 19%]
+tests\distributed\test_route_context_versions.py .                       [ 19%]
+tests\distributed\test_server_authoritative_control.py ...............   [ 22%]
+tests\enhanced\test_certified_journey.py ............                    [ 24%]
+tests\enhanced\test_certified_runtime.py ................                [ 27%]
+tests\enhanced\test_cli_config.py .                                      [ 27%]
+tests\enhanced\test_continuous_motion.py ............................... [ 33%]
+.......                                                                  [ 34%]
+tests\enhanced\test_continuous_safety.py ..............................  [ 39%]
+tests\enhanced\test_destination_pool.py ................................ [ 45%]
+.....................................                                    [ 52%]
+tests\enhanced\test_export_capacity_estimate.py .                        [ 52%]
+tests\enhanced\test_fast_continuous_safety.py ............               [ 54%]
+tests\enhanced\test_fast_reservation_scan.py ..........                  [ 56%]
+tests\enhanced\test_goal_lane_approach.py .........                      [ 57%]
+tests\enhanced\test_gui_metropolis.py ................................   [ 63%]
+tests\enhanced\test_joint_reservations.py ......                         [ 64%]
+tests\enhanced\test_journey_routes.py ....                               [ 65%]
+tests\enhanced\test_metropolis_runtime.py ....                           [ 66%]
+tests\enhanced\test_mission_features.py ...                              [ 66%]
+tests\enhanced\test_optional_feature_integration.py .                    [ 66%]
+tests\enhanced\test_partition_router.py ....                             [ 67%]
+tests\enhanced\test_partition_topology.py ...............                [ 70%]
+tests\enhanced\test_population.py ....                                   [ 71%]
+tests\enhanced\test_prefix_reservations.py ...........................   [ 75%]
+tests\enhanced\test_regional_backend.py ..................               [ 79%]
+tests\enhanced\test_regional_control.py .................                [ 82%]
+tests\enhanced\test_state_adapter.py ...                                 [ 82%]
+tests\enhanced\test_trajectory_profile.py .............................  [ 88%]
+tests\enhanced\test_uav_partition_motion.py ...                          [ 88%]
+tests\integration\test_database_topology_smoke.py .                      [ 88%]
+tests\integrations\test_postgres_airspace_repository.py ...              [ 89%]
+tests\integrations\test_postgres_ramp_state_provider.py ..               [ 89%]
+tests\performance\test_directed_topology_build.py ..                     [ 90%]
+tests\simulation\test_plotting_trajectories.py .                         [ 90%]
+tests\simulation\test_ramp_switch_duration.py ....                       [ 90%]
+tests\simulation\test_regional_spawn_capacity.py .                       [ 91%]
+tests\simulation\test_regressions.py ..                                  [ 91%]
+tests\simulation\test_timing_and_frame_output.py ..                      [ 91%]
+tests\simulation\test_uav_30_lane_switching.py .                         [ 92%]
+tests\test_algorithm1_only.py .......                                    [ 93%]
+tests\test_app_database_airspace_source.py ..........                    [ 95%]
+tests\test_app_topology_profile.py ..                                    [ 95%]
+tests\test_package_structure.py .                                        [ 95%]
+tests\test_sequential_logging.py .                                       [ 95%]
+tests\test_simulation_timing.py ...                                      [ 96%]
+tests\test_trace_logging.py ....                                         [ 97%]
+tests\ui\test_gui_parallel_limits.py ........                            [ 98%]
+tests\visualization\test_frame_exporter.py ........                      [100%]
+
+============================== warnings summary ===============================
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:58
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:58: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class ColorButton(QtWidgets.QPushButton):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:105
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:105: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class ColorLayout(QtWidgets.QHBoxLayout):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:162
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:162: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FontLayout(QtWidgets.QGridLayout):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:210
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:210: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FormWidget(QtWidgets.QWidget):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:359
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:359: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FormComboWidget(QtWidgets.QWidget):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:389
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:389: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FormTabWidget(QtWidgets.QWidget):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:418
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\qt_editor\_formlayout.py:418: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FormDialog(QtWidgets.QDialog):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:188
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:188
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:188
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:188: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FigureCanvasQT(FigureCanvasBase, QtWidgets.QWidget):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:507
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:507: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class MainWindow(QtWidgets.QMainWindow):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:631
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:631
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:631
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:631: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class NavigationToolbar2QT(NavigationToolbar2, QtWidgets.QToolBar):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:816
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:816: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class SubplotToolQt(QtWidgets.QDialog):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:914
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:914
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:914
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qt.py:914: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class ToolbarQt(ToolContainerBase, QtWidgets.QToolBar):
+
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qtagg.py:16
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qtagg.py:16
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qtagg.py:16
+..\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qtagg.py:16
+  D:\Anaconda3\envs\hxy2\lib\site-packages\matplotlib\backends\backend_qtagg.py:16: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class FigureCanvasQTAgg(FigureCanvasAgg, FigureCanvasQT):
+
+src\uav_sim\ui\gui_config.py:68
+  D:\无人机_大都会36区_第一版增强\src\uav_sim\ui\gui_config.py:68: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class AirspaceCanvas(FigureCanvasQTAgg):
+
+src\uav_sim\ui\gui_config.py:145
+  D:\无人机_大都会36区_第一版增强\src\uav_sim\ui\gui_config.py:145: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class PickupRow(QWidget):
+
+src\uav_sim\ui\gui_config.py:193
+  D:\无人机_大都会36区_第一版增强\src\uav_sim\ui\gui_config.py:193: DeprecationWarning: sipPyTypeDict() is deprecated, the extension module should use sipPyTypeDictRef() instead
+    class ConfigGUI(QMainWindow):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================ 554 passed, 25 warnings in 167.97s (0:02:47) =================

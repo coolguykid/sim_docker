@@ -1,0 +1,19 @@
+........................................................................ [ 17%]
+........................................................................ [ 34%]
+........................................................................ [ 51%]
+...............................FF....................................... [ 68%]
+........................................................................ [ 85%]
+.............................................................            [100%]
+================================== FAILURES ===================================
+_______________ test_invalid_manual_goal_is_rejected[changes6] ________________
+tests\enhanced\test_destination_pool.py:214: in test_invalid_manual_goal_is_rejected
+    _pool(_environment(), manual=[spec])
+E   Failed: DID NOT RAISE <class 'ValueError'>
+_______________ test_invalid_manual_goal_is_rejected[changes7] ________________
+tests\enhanced\test_destination_pool.py:214: in test_invalid_manual_goal_is_rejected
+    _pool(_environment(), manual=[spec])
+E   Failed: DID NOT RAISE <class 'ValueError'>
+=========================== short test summary info ===========================
+FAILED tests/enhanced/test_destination_pool.py::test_invalid_manual_goal_is_rejected[changes6]
+FAILED tests/enhanced/test_destination_pool.py::test_invalid_manual_goal_is_rejected[changes7]
+2 failed, 419 passed, 25 warnings in 130.59s (0:02:10)

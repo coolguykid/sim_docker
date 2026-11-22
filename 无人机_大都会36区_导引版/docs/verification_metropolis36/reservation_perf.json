@@ -1,0 +1,14 @@
+{
+  "uncached_bounds_and_probes": {
+    "seconds": 1.9461114000000002,
+    "repetitions": 100,
+    "start_time": 0.6126027870798078,
+    "identical_each_repeat": true
+  },
+  "cached_bounds_single_phase_probes": {
+    "seconds": 0.32470489999999996,
+    "repetitions": 100,
+    "start_time": 0.6126027870798078,
+    "identical_each_repeat": true
+  }
+}

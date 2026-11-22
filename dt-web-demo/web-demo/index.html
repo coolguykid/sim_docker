@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>低空航路网络 · 数字孪生展示</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23286452%27/%3E%3Cpath d=%27M6 20L16 9l10 11M10 20h12%27 fill=%27none%27 stroke=%27%23F4F3EE%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:dark;--bg:#0b1018;--panel:#121a25;--line:#253143;--text:#e8edf5;--muted:#8593a8;--green:#76edbc;--cyan:#6cbfe8;--amber:#efc779;--red:#ef8a86}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.6 "Segoe UI","Microsoft YaHei",sans-serif}
+button,select,input{font:inherit}
+button,select{background:#172231;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:7px 11px}
+button{cursor:pointer;transition:.15s}
+button:hover{border-color:#60758c;background:#203044}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+button.active{background:#203c36;color:var(--green);border-color:#376653}
+select{cursor:pointer;max-width:160px}
+header{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;gap:15px}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:36px;height:36px;border:1px solid #48685e;border-radius:10px;display:grid;place-items:center;color:var(--green);background:#17302b;font-size:23px}
+h1{font-size:17px;letter-spacing:1px;margin:0;font-weight:600}
+.sub{font-size:10px;color:var(--muted);letter-spacing:2px}
+.badge{display:inline-flex;align-items:center;gap:7px;background:#17312c;border:1px solid #2c5749;color:var(--green);padding:4px 9px;border-radius:5px;font-size:11px;white-space:nowrap}
+.dot{width:6px;height:6px;background:currentColor;border-radius:50%}
+.header-right{display:flex;align-items:center;gap:15px}
+.mono{font-family:Consolas,monospace;font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:66px minmax(0,1fr)}
+nav{border-right:1px solid var(--line);padding:22px 9px;display:flex;flex-direction:column;gap:12px;align-items:center}
+nav button{width:46px;padding:10px 0;font-size:11px;line-height:1.5}
+nav button b{display:block;font-size:19px;font-weight:500}
+.nav-end{margin-top:auto;color:var(--muted);font-size:10px;writing-mode:vertical-rl;letter-spacing:3px}
+main{padding:20px 24px;min-width:0;max-width:1920px;width:100%;margin:auto}
+.page-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:17px}
+.eyebrow{font-size:10px;letter-spacing:2px;color:var(--green);margin-bottom:2px}
+h2{font-size:21px;font-weight:500;margin:0}
+.muted{color:var(--muted)}
+.page-tools,.tools,.tabs{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:15px}
+.kpi{background:linear-gradient(115deg,#17222d,#121a25);border:1px solid var(--line);border-radius:10px;padding:15px 18px;position:relative;overflow:hidden}
+.kpi:after{content:"";width:60px;height:60px;border:1px solid #304136;border-radius:50%;position:absolute;right:-15px;bottom:-22px}
+.kpi-label{color:#a2afbf;font-size:12px}
+.kpi-value{font-size:28px;font-weight:500;line-height:1.5;letter-spacing:.5px}
+.kpi-unit{font-size:12px;color:var(--muted);margin-left:7px}
+.kpi-foot{font-size:11px;color:var(--muted)}
+.green{color:var(--green)}
+.cyan{color:var(--cyan)}
+.amber{color:var(--amber)}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:15px}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden;min-width:0}
+.panel-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.panel-title{font-size:13px;font-weight:600}
+.panel-note{font-size:10px;color:var(--muted);margin-top:2px}
+.panel-body{padding:13px 16px}
+.map-panel{position:relative}
+.map-toolbar{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.layer-btn{font-size:11px;padding:4px 9px}
+.canvas-wrap{height:395px;position:relative;background:radial-gradient(ellipse at 55% 50%,#152330 0%,#101720 67%)}
+canvas{display:block;width:100%;height:100%}
+#scene{touch-action:none;cursor:grab}
+#scene:active{cursor:grabbing}
+.map-tag{position:absolute;top:15px;left:17px;pointer-events:none}
+.map-tag strong{display:block;font-size:11px;font-weight:500;color:#afc0d0}
+.map-tag span{font-size:10px;color:var(--muted)}
+.map-hint{position:absolute;bottom:12px;right:15px;color:#6f8195;font-size:10px;pointer-events:none}
+.tooltip{position:absolute;pointer-events:none;background:#0b1420ee;border:1px solid #4c6b68;border-radius:5px;padding:5px 9px;display:none;z-index:3;font-size:11px;max-width:240px}
+.map-footer{padding:9px 15px;display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);color:var(--muted);font-size:10px;flex-wrap:wrap}
+.legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.swatch{height:6px;width:16px;display:inline-block;border-radius:2px}
+.right-stack{display:flex;flex-direction:column;gap:15px}
+.heat-head,.heat-row{display:grid;grid-template-columns:39px repeat(6,1fr);gap:5px;align-items:center}
+.heat-head{font-size:10px;color:var(--muted);text-align:center;margin-bottom:8px}
+.heat-scroll{height:204px;overflow:auto;padding-right:5px;scrollbar-width:thin}
+.heat-row{margin-bottom:5px;font-size:10px;color:var(--muted)}
+.heat-row.current{color:var(--text)}
+.heat-cell{height:18px;padding:0;border:1px solid transparent;border-radius:3px;font-size:8px;color:#071e24}
+.heat-cell:hover,.heat-cell.selected{border-color:#fff;box-shadow:0 0 0 1px #ffffff55}
+.summary-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.summary-id{font-size:20px;font-weight:500}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px 16px}
+.summary-grid label{display:block;color:var(--muted);font-size:10px}
+.summary-grid b{font-size:14px;font-weight:500}
+.summary-tip{font-size:10px;color:var(--muted);border-top:1px solid var(--line);padding-top:9px;margin-top:11px;min-height:28px}
+.bottom-grid{display:grid;grid-template-columns:1.2fr 1fr .85fr;gap:15px;margin-top:15px}
+.chart-wrap{height:198px;padding:10px 10px 0}
+.matrix-wrap{padding:10px 15px 12px;overflow:auto}
+table{border-collapse:separate;border-spacing:4px;width:100%;font-size:10px;text-align:center}
+th{color:var(--muted);font-weight:400}
+td{border-radius:3px;padding:5px 2px;font-family:Consolas,monospace}
+.matrix-tabs button{font-size:10px;padding:4px 7px}
+.rank-list{padding:13px 15px}
+.rank-row{margin-bottom:12px}
+.rank-label{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px}
+.track{height:5px;background:#202d3b;border-radius:4px;overflow:hidden}
+.fill{height:100%;border-radius:4px;transition:width .3s}
+.timeline{display:flex;align-items:center;gap:15px;padding:13px 16px;margin-top:15px}
+.timeline button{min-width:65px}
+.timeline-track{flex:1;min-width:60px}
+.timeline input{width:100%;accent-color:var(--green);cursor:pointer}
+.time-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:-3px}
+footer{display:flex;justify-content:space-between;color:#697c90;font-size:10px;margin-top:12px;gap:15px}
+dialog{background:#15202d;color:var(--text);border:1px solid #3b5066;border-radius:12px;padding:24px;max-width:530px;width:90%;line-height:1.9}
+dialog::backdrop{background:#03070dbb;backdrop-filter:blur(4px)}
+dialog h3{margin-top:0}
+dialog ul{padding-left:20px;color:#b3c1d0}
+@media(min-width:1600px){.canvas-wrap{height:455px}.heat-scroll{height:258px}.chart-wrap{height:220px}}
+@media(max-width:1150px){main{padding:16px}.workspace{grid-template-columns:minmax(0,1fr) 285px}.bottom-grid{grid-template-columns:1fr 1fr}.rank-panel{grid-column:1/-1}.rank-list{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.header-right .mono{display:none}}
+@media(max-width:850px){header{padding:0 14px}.layout{grid-template-columns:1fr}nav{flex-direction:row;border-right:0;border-bottom:1px solid var(--line);padding:7px 14px}nav button{width:auto;padding:5px 12px}nav button b{display:inline;font-size:12px;margin-right:5px}.nav-end{display:none}.workspace{grid-template-columns:1fr}.right-stack{display:grid;grid-template-columns:1fr 1fr}.heat-scroll{height:190px}.kpis{gap:8px}.kpi{padding:12px}.kpi-value{font-size:24px}.page-head{align-items:flex-start}.canvas-wrap{height:380px}}
+@media(max-width:580px){h1{font-size:14px}.sub{font-size:8px}.header-right .badge{display:none}.kpis{grid-template-columns:1fr 1fr}.page-head{flex-direction:column}.right-stack,.bottom-grid{display:grid;grid-template-columns:1fr}.rank-panel{grid-column:auto}.rank-list{display:block}.canvas-wrap{height:340px}.timeline{gap:8px;flex-wrap:wrap}.timeline-track{min-width:150px}.timeline .badge{display:none}footer{flex-direction:column;gap:3px}.panel-head{flex-wrap:wrap}.map-toolbar{gap:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+:root{color-scheme:light;--bg:#F4F3EE;--panel:#FFFEFA;--line:#DDDED5;--text:#283C35;--muted:#647169;--green:#286452;--cyan:#316E91;--amber:#94621E;--red:#AA5146}
+body{background:#F4F3EE}
+header{background:#F9F8F3}
+nav{background:#EFEEE7}
+button,select{background:#F8F7F2;border-color:#D4D8CD}
+button:hover{background:#EBEFE7;border-color:#829B8A}
+button.active{background:#DFEADF;color:#245D46;border-color:#91AF99}
+.logo{background:#E3ECE0;color:#286452;border-color:#A6BCA5}
+.badge{background:#EAF0E5;color:#355F45;border-color:#CDDCC5}
+.panel{background:#FFFEFA;box-shadow:0 3px 14px #34453404}
+.panel-head{background:#FCFBF6}
+.kpi{background:linear-gradient(115deg,#FFFEFA,#F9F8F1);box-shadow:0 2px 9px #34453403}
+.kpi:after{border-color:#DDE5D6}
+.kpi-label{color:#56665D}
+.canvas-wrap{background:radial-gradient(ellipse at 55% 50%,#F8FAF4 0%,#EEEFE7 90%)}
+.map-tag strong{color:#3E5A4C}
+.map-tag{background:#F5F6EFDD;padding:5px 8px;border:1px solid #E0E4D7;border-radius:5px;z-index:1}
+.map-hint{color:#647169;background:#F4F5EDDB;padding:3px 7px;border-radius:4px}
+.tooltip{background:#FFFEFAF5;color:#283C35;border-color:#93AC99;box-shadow:0 3px 14px #32472C18}
+.heat-cell{color:#283C35;font-size:9px}
+.heat-cell:hover,.heat-cell.selected{border-color:#234E3D;box-shadow:inset 0 0 0 1px #234E3D}
+.heat-row.current>span{color:#245D46;font-weight:700}
+.track{background:#ECEDE5}
+footer{color:#647169}
+dialog{background:#FFFEFA;border-color:#C9D2C2;box-shadow:0 18px 80px #2D3E3333}
+dialog::backdrop{background:#34433855}
+dialog ul{color:#52665A}
+.summary-grid b{font-variant-numeric:tabular-nums}
+.panel-note{font-size:11px}
+.heat-scroll{scrollbar-color:#C2CDBB transparent}
+@media(max-width:580px){header{gap:8px}.brand{gap:8px}.logo{width:30px;height:30px;flex-shrink:0}.header-right{gap:0}.header-right button{white-space:nowrap;padding:6px 8px}h1{font-size:12px;letter-spacing:0}.sub{font-size:7px;letter-spacing:1px}main{padding:12px}.page-tools{width:100%}.page-tools select{flex:1;min-width:0}.heat-cell{height:22px}.timeline-track{order:3;flex-basis:100%}.map-toolbar select{max-width:130px}}
+
+</style>
+<link rel="stylesheet" href="regional.css">
+<link rel="stylesheet" href="center.css">
+<link rel="stylesheet" href="desktop.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg class="dt-icon" viewBox="0 0 24 24"><path d="M3 16 12 5l9 11M6 16h12M5 20h14M7.5 11h9M12 5v15"/></svg></div>
+    <div><h1>低空航路网络数字孪生</h1><div class="sub">LOW-ALTITUDE AIRWAY · DIGITAL TWIN</div></div>
+  </div>
+  <div class="header-right">
+    <span class="badge"><i class="dot"></i>离线演示 · MOCK DATA</span>
+    <span class="mono muted">2026.10.20 / <span id="clock">10:30</span></span>
+    <button id="aboutBtn">展示说明</button>
+  </div>
+</header>
+
+<div class="layout">
+<nav aria-label="视图导航">
+  <button class="active" data-view="center" aria-current="page"><svg class="dt-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></svg><span>中心 DT</span></button>
+  <button data-view="region"><svg class="dt-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7m-3.5-3.5v7"/></svg><span>区域 DT</span></button>
+  <span class="nav-end">AIRSPACE OPERATIONS</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <div>
+      <h2 id="pageTitle">中心数字孪生态势</h2>
+      <div class="page-description">分层航路 · 宏观交通 · 导引与推演</div>
+    </div>
+    <div class="page-tools">
+      <select id="scenario" aria-label="模拟场景">
+        <option value="normal">场景：常态运行</option>
+        <option value="peak" selected>场景：潮汐高峰</option>
+        <option value="reserve">场景：备用分流</option>
+      </select>
+      <select id="regionSelect" aria-label="选择区域"></select>
+      <button id="enterRegion">查看区域 ↗</button>
+    </div>
+  </div>
+
+  <section id="centerDemo" hidden aria-label="中心数字孪生模拟展示"></section>
+  <section id="regionalDemo" hidden aria-label="区域数字孪生模拟展示"></section>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">主干内飞行器数量 · 模拟</div><div><span class="kpi-value" id="kCount">—</span><span class="kpi-unit">架</span></div><div class="kpi-foot" id="scopeText">全域 · 六层聚合</div></div>
+    <div class="kpi"><div class="kpi-label">主干出口事件率合计 · 模拟</div><div><span class="kpi-value green" id="kFlow">—</span><span class="kpi-unit">架/分钟</span></div><div class="kpi-foot">对象出口合计 · 非区域边界吞吐量</div></div>
+    <div class="kpi"><div class="kpi-label">加权平均速度</div><div><span class="kpi-value cyan" id="kSpeed">—</span><span class="kpi-unit">m/s</span></div><div class="kpi-foot">按模拟飞行器数量加权</div></div>
+    <div class="kpi"><div class="kpi-label">容量利用率</div><div><span class="kpi-value amber" id="kUtil">—</span><span class="kpi-unit">%</span></div><div class="kpi-foot">数量 / 模拟同时容纳容量</div></div>
+  </div>
+
+  <div class="workspace">
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <div><div class="panel-title" id="mapTitle">全域分层航路态势</div><div class="panel-note" id="mapSubtitle">36 个示意区域 · 6 个方向层</div></div>
+        <span class="badge" id="viewBadge">CENTER DT</span>
+      </div>
+      <div class="map-toolbar">
+        <div class="tools" id="layers" aria-label="层筛选"></div>
+        <div class="tools">
+          <select id="metric" aria-label="着色指标">
+            <option value="utilization">容量利用率</option>
+            <option value="speed">平均速度</option>
+            <option value="count">飞行器数量</option>
+          </select>
+          <button id="expandBtn" class="active" style="font-size:11px">分层展开</button>
+          <button id="resetBtn" style="font-size:11px">复位</button>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="sceneWrap">
+        <canvas id="scene" aria-label="可拖动和缩放的模拟航路网络"></canvas>
+        <div class="map-tag"><strong id="mapTag">全域 / 六层展开</strong><span>局部米制示意 · 层间距已夸张</span></div>
+        <div class="map-hint">拖动旋转 · 滚轮缩放 · 点击选择</div>
+        <div class="tooltip" id="tip"></div>
+      </div>
+      <div class="map-footer">
+        <div class="legend" id="legend"></div>
+        <span id="selectionText">已选择 R15</span>
+      </div>
+    </section>
+
+    <div class="right-stack">
+      <section class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">区域 × 层态势热力图</div><div class="panel-note">点击单元格，联动区域与方向层</div></div>
+          <span class="muted" style="font-size:10px">36 × 6</span>
+        </div>
+        <div class="panel-body">
+          <div class="heat-head"><span>区域</span><span>L1</span><span>L2</span><span>L3</span><span>L4</span><span>L5</span><span>L6</span></div>
+          <div class="heat-scroll" id="heatmap"></div>
+          <div class="muted" id="heatCaption" style="font-size:9px;margin-top:7px">容量利用率 · 展示阈值为示意</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-body">
+          <div class="summary-head"><div><div class="muted" style="font-size:10px">SELECTED REGION</div><div class="summary-id" id="summaryId">R15</div></div><span class="badge" id="summaryStatus">模拟状态</span></div>
+          <div class="summary-grid">
+            <div><label>区域数量</label><b id="rCount">—</b></div>
+            <div><label>平均速度</label><b id="rSpeed">—</b></div>
+            <div><label>容量利用率</label><b id="rUtil">—</b></div>
+            <div><label>开放 / 总管道</label><b id="rOpen">—</b></div>
+          </div>
+          <div class="summary-tip" id="summaryTip">点击区域进入管道级详情</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="bottom-grid">
+    <section class="panel">
+      <div class="panel-head"><div><div class="panel-title" id="trendTitle">R15 · 数量趋势</div><div class="panel-note">实线：模拟历史　虚线：未来示意</div></div><span class="muted" style="font-size:10px">架</span></div>
+      <div class="chart-wrap"><canvas id="trend" aria-label="选中区域的模拟数量历史与未来趋势"></canvas></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div><div class="panel-title">层间有向转移矩阵</div><div class="panel-note">行：来源层 → 列：去向层</div></div>
+        <div class="tabs matrix-tabs" id="matrixTabs">
+          <button class="active" data-mode="guide">建议</button>
+          <button data-mode="forecast">推演</button>
+          <button data-mode="observed">实际</button>
+        </div>
+      </div>
+      <div class="matrix-wrap">
+        <table id="matrix" aria-label="模拟层间转移概率矩阵"></table>
+        <div class="muted" id="matrixNote" style="font-size:9px">模拟策略 · 各行合计 100% · 非算法输出</div>
+      </div>
+    </section>
+
+    <section class="panel rank-panel">
+      <div class="panel-head"><div><div class="panel-title" id="rankTitle">区域利用率排序</div><div class="panel-note">同一采样时刻 · 当前筛选范围</div></div></div>
+      <div class="rank-list" id="ranking"></div>
+    </section>
+  </div>
+
+  <section class="panel timeline" aria-label="模拟回放控制">
+    <button id="playBtn">Ⅱ 暂停</button>
+    <span class="mono" id="timeValue">10:30</span>
+    <div class="timeline-track">
+      <input id="timeSlider" type="range" min="0" max="60" value="30" aria-label="模拟分钟">
+      <div class="time-labels"><span>10:00</span><span>10:15</span><span>10:30</span><span>10:45</span><span>11:00</span></div>
+    </div>
+    <span class="badge" id="playStatus"><i class="dot"></i>模拟播放 · 15×</span>
+    <button id="latestBtn">末帧</button>
+  </section>
+
+  <footer><span>仅用于评审显示效果 · 全部指标、策略、轨迹与地理布局均为模拟</span><span>RUN DEMO-001 / 本地生成 · 无数据连接</span></footer>
+</main>
+</div>
+
+<dialog id="about">
+  <h3>关于这份展示 Demo</h3>
+  <p>用于讨论中心与区域 DT 的页面内容、图表和交互。所有数据在浏览器内生成，不连接数据库，不执行控制策略。</p>
+  <ul>
+    <li>中心：36 区域、6 层、态势热力图和宏观流向。</li>
+    <li>区域：每层正反各 5 根管道，各含 1 主用和 4 备用（S3 实验示例，非固定参数）。</li>
+    <li>中心粒子为流向示意；区域个体为确定性模拟飞行器，不代表真实轨迹。</li>
+    <li>建议、推演和“实际”矩阵均为模拟样例。</li>
+    <li>备用分流由示意场景生成，不代表策略执行效果。</li>
+    <li>图表、阈值和容量定义需在真实接入时与成员确认。</li>
+  </ul>
+  <form method="dialog"><button>知道了</button></form>
+</dialog>
+
+<script src="branch-simulation.js"></script>
+<script src="region-history.js"></script>
+<script src="region-projection.js"></script>
+<script src="region-evaluation.js"></script>
+<!-- REGION_DB_TOPOLOGY: R01-R35 Docker database topology adapter. -->
+<script src="region-db-topology.js"></script>
+<script src="region-simulation-results.js"></script>
+<script src="regional.js"></script>
+<script src="center-model.js"></script>
+<script src="center-projection.js"></script>
+<script src="center-projection-ui.js"></script>
+<script src="center-history-ui.js"></script>
+<script src="center.js"></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const S={view:"center",region:14,layer:"all",metric:"utilization",scenario:"peak",t:30,playing:true,expanded:true,mode:"guide",yaw:-.55,zoom:1,pipe:null};
+const palette=["#4E8398","#51846C","#AC7B2C","#B56655"];
+const heatPalette=["#D7E5E9","#DDE9DB","#EEDDB8","#EBCAC1"];
+const regionName=r=>"R"+String(r+1).padStart(2,"0");
+const layerName=l=>"L"+(l+1);
+const timeName=t=>String(10+Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt=v=>Math.round(v).toLocaleString("zh-CN");
+const selectedLayers=()=>S.layer==="all"?[0,1,2,3,4,5]:[Number(S.layer)];
+
+function sample(r,l,t){
+  return RegionDemo.centerSample(r,l,t,S.scenario);
+}
+function aggregate(r,t=S.t){
+  let n=0,capacity=0,weighted=0,flow=0,open=0;
+  for(const l of selectedLayers()){
+    const a=sample(r,l,t);
+    n+=a.n;capacity+=a.capacity;weighted+=a.n*a.speed;flow+=a.flow??0;open+=a.open;
+  }
+  return {n,capacity,u:n/capacity,speed:n?weighted/n:0,flow,open,total:selectedLayers().length*10};
+}
+function scopeSummary(){
+  if(S.view==="region") return aggregate(S.region);
+  let n=0,capacity=0,weighted=0,flow=0;
+  for(let r=0;r<36;r++){const a=aggregate(r);n+=a.n;capacity+=a.capacity;weighted+=a.speed*a.n;flow+=a.flow;}
+  return {n,capacity,u:n/capacity,speed:n?weighted/n:0,flow};
+}
+function color(a,metric=S.metric){
+  const v=metric==="speed"?clamp(1-a.speed/22,0,1):metric==="count"?a.n/85:a.u;
+  return palette[v<.45?0:v<.65?1:v<.85?2:3];
+}
+function metricLabel(a){
+  return S.metric==="speed"?a.speed.toFixed(1)+" m/s":S.metric==="count"?a.n+" 架":(a.u*100).toFixed(0)+"%";
+}
+function pipesFor(r,l){
+  const a=sample(r,l,S.t),weights=Array.from({length:10},(_,p)=>p%5===4?(a.reserve?.1:0):(a.reserve?.1:.125));
+  const nums=weights.map(w=>Math.floor(a.n*w));
+  let remainder=a.n-nums.reduce((x,y)=>x+y,0);
+  for(let p=0;remainder>0;p=(p+1)%10)if(weights[p]>0){nums[p]++;remainder--;}
+  return nums.map((n,p)=>({r,l,p,n,capacity:a.capacity/(a.reserve?10:8),u:n/(a.capacity/(a.reserve?10:8)),speed:a.speed,open:p%5!==4||a.reserve,reserve:p%5===4}));
+}
+
+for(let r=0;r<36;r++){
+  const opt=document.createElement("option");opt.value=r;opt.textContent="区域："+regionName(r);$("regionSelect").append(opt);
+}
+$("regionSelect").value=S.region;
+for(const value of ["all",0,1,2,3,4,5]){
+  const b=document.createElement("button");
+  b.className="layer-btn";b.dataset.layer=value;b.textContent=value==="all"?"全部":"L"+(value+1);$("layers").append(b);
+}
+const heatCells=[];
+for(let r=0;r<36;r++){
+  const row=document.createElement("div");row.className="heat-row";row.dataset.region=r;
+  const label=document.createElement("span");label.textContent=regionName(r);row.append(label);
+  for(let l=0;l<6;l++){
+    const b=document.createElement("button");b.className="heat-cell";
+    b.addEventListener("click",()=>{S.region=r;S.layer=String(l);S.pipe=null;render();});
+    row.append(b);heatCells.push({b,r,l,row});
+  }
+  $("heatmap").append(row);
+}
+
+function navigateDT(view, presentation=false){
+  S.view=view;S.pipe=null;render();
+  if(presentation)(view==='center'?CenterDemo:RegionDemo).presentation(true);
+}
+
+function render(){
+  document.body.classList.toggle("region-mode",S.view==="region");
+  document.body.classList.toggle("center-mode",S.view==="center");
+  $("centerDemo").hidden=S.view!=="center";
+  $("regionalDemo").hidden=S.view!=="region";
+  if(S.view==="center"){CenterDemo.render(S,presentation=>navigateDT("region",presentation));return;}
+  if(S.view==="region"){RegionDemo.render(S,()=>navigateDT("center",true));return;}
+  const total=scopeSummary(),a=aggregate(S.region);
+  $("kCount").textContent=fmt(total.n);$("kFlow").textContent=S.t<1?"暂无数据":fmt(total.flow);
+  $("kSpeed").textContent=total.speed.toFixed(1);$("kUtil").textContent=(total.u*100).toFixed(1);
+  const layerText=S.layer==="all"?"六层聚合":layerName(Number(S.layer));
+  $("scopeText").textContent=(S.view==="center"?"全域":regionName(S.region))+" · "+layerText+" · 主干有效样本";
+  $("pageTitle").textContent=S.view==="center"?"中心数字孪生态势":"区域数字孪生态势";
+  $("mapTitle").textContent=S.view==="center"?"全域分层航路态势":regionName(S.region)+" · 管道级交通态势";
+  $("mapSubtitle").textContent=S.view==="center"?"区域邻接与宏观流向 · 示意布局":"双向主用 / 备用管道 · 抽样流向粒子";
+  $("viewBadge").textContent=S.view==="center"?"CENTER DT":"REGIONAL DT";
+  $("mapTag").textContent=(S.view==="center"?"全域":regionName(S.region))+" / "+(S.layer==="all"?(S.expanded?"六层展开":"聚合显示"):layerText);
+  $("summaryId").textContent=regionName(S.region);
+  $("rCount").textContent=fmt(a.n)+" 架";$("rSpeed").textContent=a.speed.toFixed(1)+" m/s";
+  $("rUtil").textContent=(a.u*100).toFixed(1)+"%";$("rOpen").textContent=a.open+" / "+a.total;
+  $("summaryStatus").textContent=a.u>.85?"高负载示意":a.u>.65?"负载上升":"平稳示意";
+  $("summaryTip").textContent=S.pipe?
+    layerName(S.pipe.l)+" / P"+String(S.pipe.p+1).padStart(2,"0")+" · "+(S.pipe.reserve?"备用":"主用")+" · "+(S.pipe.open?"开放":"关闭"):
+    S.scenario==="reserve"?"备用按模拟时间窗启用；非策略执行反馈":"点击图元查看详情；拓扑和容量均为示意";
+  $("selectionText").textContent="已选择 "+regionName(S.region)+(S.pipe?" / "+layerName(S.pipe.l)+" / P"+(S.pipe.p+1):"");
+  $("regionSelect").value=S.region;
+  $("trendTitle").textContent=regionName(S.region)+" · 数量趋势";
+  $("timeSlider").value=S.t;$("timeValue").textContent=timeName(S.t);$("clock").textContent=timeName(S.t);
+  $("playBtn").textContent=S.playing?"Ⅱ 暂停":S.t===60?"↻ 重播":"▶ 播放";
+  $("playStatus").textContent=S.playing?"模拟播放 · 15×":"模拟回放 · 已暂停";
+  $("expandBtn").classList.toggle("active",S.expanded);
+  $("enterRegion").textContent=S.view==="center"?"查看区域 ↗":"返回中心 ↗";
+  document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===S.view));
+  document.querySelectorAll("[data-layer]").forEach(b=>b.classList.toggle("active",b.dataset.layer===S.layer));
+  document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===S.mode));
+  for(const {b,r,l,row} of heatCells){
+    const v=sample(r,l,S.t);b.style.background=heatPalette[palette.indexOf(color(v))];b.textContent=S.metric==="speed"?v.speed.toFixed(0):S.metric==="count"?v.n:Math.round(v.u*100);
+    b.title=regionName(r)+" / "+layerName(l)+" · "+metricLabel(v);
+    b.setAttribute("aria-label",b.title);b.classList.toggle("selected",r===S.region&&(S.layer==="all"||Number(S.layer)===l));
+    row.classList.toggle("current",r===S.region);
+  }
+  const labels=S.metric==="speed"?["高速度","较高","较低","低速度"]:S.metric==="count"?["低数量","较低","较高","高数量"]:["<45%","45–65%","65–85%","≥85%"];
+  $("legend").innerHTML=palette.map((c,i)=>'<span class="swatch" style="background:'+c+'"></span><span>'+labels[i]+'</span>').join("")+'<span style="margin-left:7px">虚线：关闭备用</span>';
+  $("heatCaption").textContent=(S.metric==="speed"?"平均速度 · m/s":S.metric==="count"?"飞行器数量 · 架":"容量利用率 · %")+" · 色阶为展示假设";
+  document.querySelectorAll("button[data-view],button[data-layer],button[data-mode],#expandBtn").forEach(b=>b.setAttribute("aria-pressed",String(b.classList.contains("active"))));
+  renderMatrix();renderRanks();drawTrend();drawScene();
+}
+function renderMatrix(){
+  let html="<thead><tr><th>来源 / 去向</th>";
+  for(let l=0;l<6;l++)html+="<th>"+layerName(l)+"</th>";html+="</tr></thead><tbody>";
+  for(let i=0;i<6;i++){
+    const weights=Array.from({length:6},(_,j)=>i===j?0:Math.max(.2,1+((i*3+j*5+S.region)%9)+(S.mode==="guide"?0:2*Math.sin(i+j+S.t/10+(S.mode==="observed"?1:0)))));
+    const sum=weights.reduce((a,b)=>a+b,0),values=weights.map(v=>Math.floor(v/sum*100));
+    let remainder=100-values.reduce((a,b)=>a+b,0);
+    for(let j=0;remainder>0;j=(j+1)%6)if(i!==j){values[j]++;remainder--;}
+    html+="<tr><th>"+layerName(i)+"</th>";
+    for(let j=0;j<6;j++)html+='<td style="background:rgba(88,139,105,'+(i===j?.025:.06+values[j]/70)+');color:'+(i===j?"#6B776E":"#244E38")+'">'+(i===j?"—":values[j]+"%")+"</td>";
+    html+="</tr>";
+  }
+  $("matrix").innerHTML=html+"</tbody>";
+  $("matrixNote").textContent=regionName(S.region)+" · "+({guide:"模拟建议",forecast:"模拟推演",observed:"模拟观测（非真实运行）"}[S.mode])+" · 各行合计100%";
+}
+function renderRanks(){
+  let items;
+  if(S.view==="center"){
+    $("rankTitle").textContent="区域利用率排序";
+    items=Array.from({length:36},(_,r)=>({name:regionName(r),...aggregate(r)}));
+  }else{
+    $("rankTitle").textContent="开放管道利用率排序";
+    items=selectedLayers().flatMap(l=>pipesFor(S.region,l).filter(p=>p.open).map(p=>({...p,name:layerName(l)+" / P"+(p.p+1)})));
+  }
+  items.sort((a,b)=>b.u-a.u);
+  $("ranking").innerHTML=items.slice(0,6).map(a=>'<div class="rank-row"><div class="rank-label"><span>'+a.name+'</span><span class="mono">'+Math.round(a.u*100)+'%</span></div><div class="track"><div class="fill" style="width:'+Math.min(100,a.u*100)+'%;background:'+color(a,'utilization')+'"></div></div></div>').join("");
+}
+
+function context(canvas){
+  const box=canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
+  if(box.width<1||box.height<1)return null;
+  const w=box.width,h=box.height;
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+  const c=canvas.getContext("2d");if(!c)return null;
+  c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  return {c,w,h};
+}
+function drawTrend(){
+  const ctx=context($("trend"));if(!ctx)return;
+  const {c,w,h}=ctx,left=43,right=15,top=18,bottom=30;
+  const start=Math.max(0,S.t-30),end=S.t+15;
+  const series=[];
+  for(let t=start;t<=S.t;t++)series.push({t,n:aggregate(S.region,t).n});
+  const current=aggregate(S.region).n;
+  const forecast=Array.from({length:16},(_,i)=>({t:S.t+i,n:current*(1+.09*Math.sin(i/8)-i*.002)}));
+  const max=Math.max(...series.map(a=>a.n),...forecast.map(a=>a.n))*1.18;
+  const X=t=>left+(t-start)/(end-start)*(w-left-right),Y=n=>h-bottom-n/max*(h-top-bottom);
+  c.font='10px "Segoe UI","Microsoft YaHei"';c.lineWidth=1;
+  for(let i=0;i<4;i++){
+    const y=top+(h-top-bottom)*i/3;c.strokeStyle="#E1E4D9";c.beginPath();c.moveTo(left,y);c.lineTo(w-right,y);c.stroke();
+    c.fillStyle="#647169";c.fillText(String(Math.round(max*(1-i/3))),4,y+3);
+  }
+  const fx=X(S.t);c.fillStyle="#4E83980C";c.fillRect(fx,top,w-right-fx,h-top-bottom);
+  c.fillStyle="#496B7D";c.fillText("未来 15 分钟示意",Math.min(fx+8,w-118),top+10);
+  function path(points,stroke,dash,fill){
+    c.beginPath();points.forEach((a,i)=>i?c.lineTo(X(a.t),Y(a.n)):c.moveTo(X(a.t),Y(a.n)));
+    if(fill&&points.length>1){c.lineTo(X(points[points.length-1].t),h-bottom);c.lineTo(X(points[0].t),h-bottom);c.closePath();const g=c.createLinearGradient(0,top,0,h-bottom);g.addColorStop(0,"#51846C28");g.addColorStop(1,"#51846C00");c.fillStyle=g;c.fill();c.beginPath();points.forEach((a,i)=>i?c.lineTo(X(a.t),Y(a.n)):c.moveTo(X(a.t),Y(a.n)));}
+    c.strokeStyle=stroke;c.lineWidth=2;c.setLineDash(dash);c.stroke();c.setLineDash([]);
+  }
+  path(series,"#286452",[],true);path(forecast,"#316E91",[5,4],false);
+  c.fillStyle="#286452";c.beginPath();c.arc(fx,Y(current),3,0,Math.PI*2);c.fill();
+  c.fillStyle="#647169";
+  for(const t of [start,S.t,end]){c.textAlign="center";c.fillText(timeName(t),X(t),h-9);}c.textAlign="left";
+}
+
+let hits=[],animation=0;
+function drawScene(){
+  const ctx=context($("scene"));if(!ctx)return;
+  const {c,w,h}=ctx;
+  const scale=Math.min(w/750,h/570)*S.zoom;
+  function P(x,y,z=0){const a=x*Math.cos(S.yaw)-y*Math.sin(S.yaw),b=x*Math.sin(S.yaw)+y*Math.cos(S.yaw);return {x:w*.5+a*scale,y:h*.5+(S.expanded?230:0)*.375*scale+b*.47*scale-z*.75*scale};}
+  function line(a,b,stroke,width=1,dash=[]){
+    c.strokeStyle=stroke;c.lineWidth=width;c.setLineDash(dash);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([]);
+  }
+  function dot(p,rad,fill){c.fillStyle=fill;c.beginPath();c.arc(p.x,p.y,rad,0,Math.PI*2);c.fill();}
+  function text(p,s,fill="#586E61",size=10){c.fillStyle=fill;c.font=size+'px "Segoe UI","Microsoft YaHei"';c.fillText(s,p.x,p.y);}
+  function plane(z){
+    const corners=[P(-235,-235,z),P(235,-235,z),P(235,235,z),P(-235,235,z)];
+    c.beginPath();corners.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fillStyle="#93AD9208";c.fill();c.strokeStyle="#8EAA8C66";c.lineWidth=1;c.stroke();
+    for(let i=-210;i<=210;i+=70){line(P(i,-230,z),P(i,230,z),"#8EAA8C35");line(P(-230,i,z),P(230,i,z),"#8EAA8C35");}
+  }
+  hits=[];
+  plane(-10);
+  if(S.view==="center"){
+    const levels=S.layer==="all"?(S.expanded?[0,1,2,3,4,5]:[-1]):[Number(S.layer)];
+    for(const l of levels){
+      const z=l<0?5:S.expanded?l*46:5;
+      if(l>=0)plane(z);
+      for(let r=0;r<36;r++){
+        const x=(r%6-2.5)*72,y=(Math.floor(r/6)-2.5)*72,p=P(x,y,z);
+        const a=l<0?aggregate(r):sample(r,l,S.t);
+        const visual=l<0?{...a,n:a.n/6}:a,col=color(visual);
+        const neighbours=[];if(r%6<5)neighbours.push(r+1);if(r<30)neighbours.push(r+6);
+        for(const next of neighbours){
+          const q=P((next%6-2.5)*72,(Math.floor(next/6)-2.5)*72,z);
+          line(p,q,col+"50",1);
+          const k=(animation*.13+r*.17+(l+1)*.07)%1;
+          dot({x:p.x+(q.x-p.x)*k,y:p.y+(q.y-p.y)*k},1.7,col);
+        }
+        const radius=l<0?11:6;
+        c.save();c.translate(p.x,p.y);c.scale(1,.55);c.fillStyle=col+"35";c.fillRect(-radius,-radius,radius*2,radius*2);c.strokeStyle=r===S.region?"#234E3D":col;c.lineWidth=r===S.region?2:1;c.strokeRect(-radius,-radius,radius*2,radius*2);c.restore();
+        if(r===S.region){line(p,{x:p.x,y:p.y-13},col,1);dot({x:p.x,y:p.y-14},2,col);}
+        if(l<0||l===levels[levels.length-1])text({x:p.x+8,y:p.y-6},regionName(r),r===S.region?"#234E3D":"#596C60",9);
+        hits.push({kind:"region",r,l,x:p.x,y:p.y,label:regionName(r)+(l>=0?" / "+layerName(l):"")+" · "+metricLabel(visual)});
+      }
+      if(l>=0)text(P(-235,250,z),layerName(l)+" · "+l*30+"°","#526B59",11);
+    }
+  }else{
+    for(const l of selectedLayers()){
+      const z=S.expanded?l*46:l*4;
+      if(S.expanded)plane(z);
+      const angle=l*Math.PI/6;
+      function rotate(x,y){return {x:x*Math.cos(angle)-y*Math.sin(angle),y:x*Math.sin(angle)+y*Math.cos(angle)};}
+      for(const pipe of pipesFor(S.region,l)){
+        const offset=(pipe.p-4.5)*13,rev=pipe.p>=5;
+        const aa=rotate(rev?185:-185,offset),bb=rotate(rev?-185:185,offset);
+        const a=P(aa.x,aa.y,z),b=P(bb.x,bb.y,z),col=pipe.open?color(pipe):"#ABB2A3";
+        const chosen=S.pipe&&S.pipe.l===l&&S.pipe.p===pipe.p;
+        line(a,b,col,chosen?4:pipe.reserve?2:2.5,pipe.open?[]:[5,5]);
+        if(chosen)line(a,b,"#234E3D",1);
+        dot(a,2,"#728976");dot(b,2,"#728976");
+        if(pipe.open){
+          for(let i=0;i<4;i++){
+            const k=(animation*(.04+pipe.speed*.004)+i/4+pipe.p*.031)%1;
+            dot({x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k},1.8,"#244B3B");
+          }
+          const q={x:a.x+(b.x-a.x)*.62,y:a.y+(b.y-a.y)*.62},ang=Math.atan2(b.y-a.y,b.x-a.x);
+          c.save();c.translate(q.x,q.y);c.rotate(ang);c.strokeStyle=col;c.beginPath();c.moveTo(-5,-3);c.lineTo(0,0);c.lineTo(-5,3);c.stroke();c.restore();
+        }
+        hits.push({kind:"pipe",a,b,pipe,label:layerName(l)+" / P"+(pipe.p+1)+" · "+(pipe.reserve?"备用":"主用")+" · "+(pipe.open?pipe.n+" 架 / "+pipe.speed.toFixed(1)+" m/s":"关闭")});
+      }
+      const label=rotate(-210,-80);text(P(label.x,label.y,z),layerName(l)+" · "+l*30+"°","#526B59",11);
+    }
+    // 曲线连接仅用于说明跨层匝道的表现形式。
+    if(S.layer==="all"&&S.expanded){
+      for(let l=0;l<5;l++){
+        const a=P(115,80,l*46),b=P(85,105,(l+1)*46);
+        c.strokeStyle="#4E839899";c.lineWidth=1.5;c.setLineDash([3,3]);c.beginPath();c.moveTo(a.x,a.y);c.bezierCurveTo(a.x+55,a.y-8,b.x+50,b.y+15,b.x,b.y);c.stroke();c.setLineDash([]);
+      }
+    }
+  }
+  text({x:20,y:h-18},"N ↑  /  方向与几何仅供展示","#647169",10);
+}
+function distanceToSegment(p,a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;
+  const t=len?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/len,0,1):0;
+  return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);
+}
+function hitAt(x,y){
+  let best=null,bestD=13;
+  for(const hit of hits){
+    const d=hit.kind==="region"?Math.hypot(x-hit.x,y-hit.y):distanceToSegment({x,y},hit.a,hit.b);
+    if(d<bestD){bestD=d;best=hit;}
+  }
+  return best;
+}
+const canvas=$("scene");let drag=null;
+canvas.addEventListener("pointerdown",e=>{
+  drag={x:e.clientX,y:e.clientY,lastX:e.clientX,moved:false,id:e.pointerId};
+  canvas.setPointerCapture(e.pointerId);$("tip").style.display="none";
+});
+canvas.addEventListener("pointermove",e=>{
+  if(drag){const dx=e.clientX-drag.lastX;drag.lastX=e.clientX;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;
+    if(drag.moved){S.yaw+=dx*.008;drawScene();}return;}
+  const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,hit=hitAt(x,y),tip=$("tip");
+  tip.style.display=hit?"block":"none";
+  if(hit){tip.textContent=hit.label;tip.style.left=Math.max(6,Math.min(x+12,box.width-240))+"px";tip.style.top=Math.max(5,y-35)+"px";}
+});
+canvas.addEventListener("pointerup",e=>{
+  if(!drag)return;
+  if(!drag.moved){
+    const box=canvas.getBoundingClientRect(),hit=hitAt(e.clientX-box.left,e.clientY-box.top);
+    if(hit){if(hit.kind==="region"){S.region=hit.r;S.pipe=null;}else{S.pipe=hit.pipe;}render();}
+  }
+  drag=null;
+});
+canvas.addEventListener("pointercancel",()=>{drag=null;});
+canvas.addEventListener("pointerleave",()=>{$("tip").style.display="none";});
+canvas.addEventListener("wheel",e=>{e.preventDefault();S.zoom=clamp(S.zoom*Math.exp(-e.deltaY*.001),.6,1.8);drawScene();},{passive:false});
+
+document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{S.view=b.dataset.view;S.pipe=null;render();}));
+$("enterRegion").addEventListener("click",()=>{S.view=S.view==="center"?"region":"center";S.pipe=null;render();});
+$("regionSelect").addEventListener("change",e=>{S.region=Number(e.target.value);S.pipe=null;render();});
+$("scenario").addEventListener("change",e=>{S.scenario=e.target.value;S.pipe=null;render();});
+$("metric").addEventListener("change",e=>{S.metric=e.target.value;render();});
+$("layers").addEventListener("click",e=>{const b=e.target.closest("[data-layer]");if(b){S.layer=b.dataset.layer;S.pipe=null;render();}});
+$("matrixTabs").addEventListener("click",e=>{const b=e.target.closest("[data-mode]");if(b){S.mode=b.dataset.mode;render();}});
+$("expandBtn").addEventListener("click",()=>{S.expanded=!S.expanded;render();});
+$("resetBtn").addEventListener("click",()=>{S.yaw=-.55;S.zoom=1;drawScene();});
+$("aboutBtn").addEventListener("click",()=>$("about").showModal());
+$("timeSlider").addEventListener("input",e=>{S.t=Number(e.target.value);S.playing=false;S.pipe=null;render();});
+$("playBtn").addEventListener("click",()=>{if(S.t===60){S.t=0;S.playing=true;}else S.playing=!S.playing;lastTick=performance.now();render();});
+$("latestBtn").addEventListener("click",()=>{S.t=60;S.playing=false;S.pipe=null;render();});
+
+const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lastFrame=0,lastTick=performance.now();
+function frame(now){
+  if(S.view==="center"){CenterDemo.frame(now);lastFrame=now;lastTick=now;requestAnimationFrame(frame);return;}
+  if(S.view==="region"){RegionDemo.frame(now,S);lastFrame=now;lastTick=now;requestAnimationFrame(frame);return;}
+  if(!document.hidden&&now-lastFrame>33){
+    const dt=Math.min(.1,(now-lastFrame)/1000||0);lastFrame=now;
+    if(S.playing){
+      if(!reducedMotion)animation+=dt;
+      if(now-lastTick>=4000){lastTick=now;S.t=Math.min(60,S.t+1);if(S.t===60)S.playing=false;S.pipe=null;render();}
+      else if(!reducedMotion)drawScene();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+document.addEventListener("visibilitychange",()=>{lastTick=performance.now();lastFrame=performance.now();});
+const observer=new ResizeObserver(()=>{if(S.view==="region")RegionDemo.resize();else{drawScene();drawTrend();}});
+observer.observe($("regionalDemo"));observer.observe($("sceneWrap"));observer.observe($("trend").parentElement);
+render();requestAnimationFrame(frame);
+</script>
+<script src="desktop-ui.js"></script>
+</body>
+</html>

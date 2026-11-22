@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
+.venv/
+venv/
+artifacts/logs/
+artifacts/reports/
+*.log
+uav_turn_trace.txt
+memory_profile.json
+

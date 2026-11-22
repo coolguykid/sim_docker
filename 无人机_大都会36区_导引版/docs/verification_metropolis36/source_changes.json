@@ -1,0 +1,241 @@
+{
+  "changed": [
+    {
+      "path": "configs/airspace_metropolis.yaml",
+      "baseline_sha256": "3f032cb92795d0e2bf7c19d8ab2f46f6039cf922645ccfe20fb6529fda4e502e",
+      "new_sha256": "59df74f1f32438c3dcad8e0b518f98ed1a44a104c2b8a175616d70cedbaf9bb5"
+    },
+    {
+      "path": "configs/default.yaml",
+      "baseline_sha256": "bcf886bc37f9d3884fddfad97d5aebce47389fbb550b763272ff317460554e32",
+      "new_sha256": "27aafcb0c7248e683f40c13d06e0050551acc4733742276c4a1ccad44ee54548"
+    },
+    {
+      "path": "main.py",
+      "baseline_sha256": "6a3765b775fb61323a08f9d4bd11b867412966c44dbbc9d56562108131a88b24",
+      "new_sha256": "b2408d2762dc02e1ec8b4f8efcf1527c12540932fc41bb5381b799d7a209bc36"
+    },
+    {
+      "path": "README.md",
+      "baseline_sha256": "23e93f7a01a1df3e4fef9efc4296b7b4454df897faf66080c378705b559496e0",
+      "new_sha256": "5e45aa6c2897ee59f7b6b43150067b54f8cf2b9260d6db1b37a6022a8056d29b"
+    },
+    {
+      "path": "requirements-py39-hxy2.txt",
+      "baseline_sha256": "6296042a9796ec90f682263c1b4e64b1ef3df1ddf620241b1ba94eec9d92d728",
+      "new_sha256": "20c5e473790e9a1f360381d03ef4b9557f089d866ef765d4f8739f4b21d74012"
+    },
+    {
+      "path": "requirements.txt",
+      "baseline_sha256": "2e3f56e8918ca970469fa32244b92e55559f3daf84e1a0f640b584ac25cff87a",
+      "new_sha256": "9b31b0feebc8ed7dfe1ac3b1cac1c5e443bbecb9f8c0ed5bb68b233e7f7c6a45"
+    },
+    {
+      "path": "src/uav_sim/airspace/config.py",
+      "baseline_sha256": "b04dc4aaed3897ef002ae99b4b7370f756220b6b2858ad4816db5e40c3bd13fc",
+      "new_sha256": "4a13a9a722a5a380239a1602e8ae18507a4bf5daf202f5a9dcfdd0ba9a47602f"
+    },
+    {
+      "path": "src/uav_sim/airspace/environment.py",
+      "baseline_sha256": "c78526785ec3e03ca6094fcbd316d0de20d5fb2ea4e3b584c6c4b8e89f2210b8",
+      "new_sha256": "e20e05e16d2b6847917de76ac5942a02efeb0ac66030aa144a4ad09b43b94868"
+    },
+    {
+      "path": "src/uav_sim/airspace/ramp_topology.py",
+      "baseline_sha256": "1ae0131aa7a80be25f78811b28ab0b4b7201ce2d62855890f664d3a5f45c87b7",
+      "new_sha256": "bc1278f7a8b1d9b4ead08b2a57c27d856d9a91b22d15d6d8b41ca842b9009ef1"
+    },
+    {
+      "path": "src/uav_sim/app.py",
+      "baseline_sha256": "14e3b565fdcba9152d796b068814ea084676c92453cd21bebf6ebd053a912de6",
+      "new_sha256": "6dad2992d24a4a73a7cec6aa49d2a6bb9a1cc5020e370f50eb7d68b27134ff70"
+    },
+    {
+      "path": "src/uav_sim/cli.py",
+      "baseline_sha256": "5be3d577e7be9ddc30546171c3e4e0456f603cc258477ca2c9961cd93cadd7ab",
+      "new_sha256": "38447bc3782049b9b637e5d072aa0aa8e2debce43b45d4ec4ec933028e3323b6"
+    },
+    {
+      "path": "src/uav_sim/distributed/authoritative_control_server.py",
+      "baseline_sha256": "aba705ede24255ad870cc221010f1c3fe8c08cdb59ef4ced8f21bae99521eb83",
+      "new_sha256": "76ed4b391823dd7bdb4577bc32335b6deacacbd6fc80a140c0bbd8e1cf6f01cb"
+    },
+    {
+      "path": "src/uav_sim/distributed/orchestrator.py",
+      "baseline_sha256": "0882b880c7fd154ebfdb2070797b270b890f729b8f1fc00b773f25cad3539267",
+      "new_sha256": "9ef1f5bcba2988b0b434f47c4cb631b117672eb6cf357260851fe8e4505cfd0c"
+    },
+    {
+      "path": "src/uav_sim/distributed/route_planning_server.py",
+      "baseline_sha256": "fbd06afe9a3dd53beebf181b4a7d1200c94389c913ea1e163dbe72ec9c4c8a05",
+      "new_sha256": "ad0dc4b0b1a94047fa96794a17dec0877d6b4f7f4fe20c5e28f2df2d504646e6"
+    },
+    {
+      "path": "src/uav_sim/distributed/uav_actor.py",
+      "baseline_sha256": "f726b8cdf89ba3cdab1b2625c18b5379a64130b383a87a6db504e59a21a2cceb",
+      "new_sha256": "04c1d8292f45750fb03e1d4df4a97b4c9213d6ae28fa5decc3ddee5dc299eb4e"
+    },
+    {
+      "path": "src/uav_sim/entities/uav.py",
+      "baseline_sha256": "df29e24189c11abe26962b08f964d3744cb1d3fa0cb7c412ea425b5ffa06b1d6",
+      "new_sha256": "633e597b8945e9de7a642be6ee7b42cbf5bf2d7bd656586bd91463b6eaa73307"
+    },
+    {
+      "path": "src/uav_sim/simulation/plotting.py",
+      "baseline_sha256": "c00682455edffa408fd5200aa35d5d5e3ce76d868fc40e6089e5541d22130f42",
+      "new_sha256": "dfae5d17629d5909603e06be53e3143a06324e1f0272847094651303e432c55f"
+    },
+    {
+      "path": "src/uav_sim/simulation/runner.py",
+      "baseline_sha256": "37b18dd95e3b6283400634c148d16159ee527bf24f28db2c1d96c5fa8e44f9e9",
+      "new_sha256": "c414801e79699f7994122ed22c126300dbc69efeda8e844e80119d0656b5dcc4"
+    },
+    {
+      "path": "src/uav_sim/ui/gui_config.py",
+      "baseline_sha256": "952812d16e15b4a81a7c7ab911e780165c5c6a50403fe70094ee2b9d90af980b",
+      "new_sha256": "672b54149386e5d953fd651e51fa5fd364c871f8f7494edf91969471f07e9328"
+    },
+    {
+      "path": "src/uav_sim/utils/trace_logger.py",
+      "baseline_sha256": "7243bc1cfc8a1885b0eee6d06c6bcecc2f0c5bc5867c29ef7965e8bf9d5dd624",
+      "new_sha256": "af9544b9848f26593e23cf3eafee866f6044735bd82a58cca95015b410177786"
+    },
+    {
+      "path": "src/uav_sim/visualization/frame_exporter.py",
+      "baseline_sha256": "590b1a4d50099db47f6ca2c992efa7601041f5446928529bb1489d01c57f10c6",
+      "new_sha256": "7004b62d56df0a448725019088bf0572da71e511d947282659fc72efc46a4427"
+    },
+    {
+      "path": "tests/airspace/test_airspace_modes.py",
+      "baseline_sha256": "fe6ec03d1e8db4ac8ab0a23c3d0cbd584b5e674d15760de85bc7440daa63a901",
+      "new_sha256": "a0ba5d5fe008798b3b7a04912ed6fe154524b6cdbc24f01730176233c917f906"
+    },
+    {
+      "path": "tests/airspace/test_airspace_ramp_density.py",
+      "baseline_sha256": "a711cf2cf52e36fb9f5e31bfbed564bd92fb8edeefde1e6c296abc4857188ecd",
+      "new_sha256": "175056cab44730dd857bb8b7bdef3c05990a6b459ac5ee52fdcea7366f9e9d5d"
+    },
+    {
+      "path": "tests/test_app_database_airspace_source.py",
+      "baseline_sha256": "64443ce62c1bd56b6e86911df815adea0809eb974e85c49acee80521d66b2cec",
+      "new_sha256": "336c74fd328d775f9b203462df7e4c791842559f671aafc92f505454244640e0"
+    },
+    {
+      "path": "tests/test_app_topology_profile.py",
+      "baseline_sha256": "3a4b9043083ac8865d2c89a8882e46081782ad30ecc8c82408499fe96d2e6b86",
+      "new_sha256": "658f7cf61325df3ecea4c3d46f0ee3756e9c56ddfc662881156125d8b5b35c2b"
+    },
+    {
+      "path": "tests/ui/test_gui_parallel_limits.py",
+      "baseline_sha256": "36b786f1e8c26bf914bbe5d308440c43a84acabfbc64d9ec511d0010142017c9",
+      "new_sha256": "bd80e0cb27802d56a1f1117a50e88216fa510370dad01f77f750db1a3812a3df"
+    }
+  ],
+  "removed": [],
+  "added": [
+    "docs/design_metropolis36.md",
+    "docs/implementation_plan_metropolis36.md",
+    "docs/verification_metropolis36/baseline_integrity.json",
+    "docs/verification_metropolis36/baseline_sha256.json",
+    "docs/verification_metropolis36/centralized_regional_1s.log",
+    "docs/verification_metropolis36/continuation_status.md",
+    "docs/verification_metropolis36/continuous_boundary1000.log",
+    "docs/verification_metropolis36/current_tests.txt",
+    "docs/verification_metropolis36/early_full_1s_performance_attempt.log",
+    "docs/verification_metropolis36/frozen_source_integrity_final.json",
+    "docs/verification_metropolis36/frozen_source_sha256_20261102.json",
+    "docs/verification_metropolis36/full_tests_20261102.txt",
+    "docs/verification_metropolis36/full_tests_initial.txt",
+    "docs/verification_metropolis36/goal_lane_review.json",
+    "docs/verification_metropolis36/gui_advanced_ray.png",
+    "docs/verification_metropolis36/gui_destinations.png",
+    "docs/verification_metropolis36/gui_dt01.png",
+    "docs/verification_metropolis36/gui_final_20261102.png",
+    "docs/verification_metropolis36/gui_manual_destinations.png",
+    "docs/verification_metropolis36/gui_onboard_ray.png",
+    "docs/verification_metropolis36/gui_overview.png",
+    "docs/verification_metropolis36/jit1000_20261102.log",
+    "docs/verification_metropolis36/jit1000_improved.log",
+    "docs/verification_metropolis36/joint_liveness_review.json",
+    "docs/verification_metropolis36/lane_gui_compat_tests.txt",
+    "docs/verification_metropolis36/native_safety_perf.json",
+    "docs/verification_metropolis36/native_scan_equivalent_perf.json",
+    "docs/verification_metropolis36/nativebinary1000.log",
+    "docs/verification_metropolis36/pressure_regional_1s_attempt1.log",
+    "docs/verification_metropolis36/pressure_regional_1s_attempt2.log",
+    "docs/verification_metropolis36/profile200.txt",
+    "docs/verification_metropolis36/pruned1000.log",
+    "docs/verification_metropolis36/pytest_final_20261102.txt",
+    "docs/verification_metropolis36/pytest_final_current_20261102.txt",
+    "docs/verification_metropolis36/real_ray_metropolis_smoke.json",
+    "docs/verification_metropolis36/real_ray_metropolis_smoke.log",
+    "docs/verification_metropolis36/reservation_full100_profile.txt",
+    "docs/verification_metropolis36/reservation_perf.json",
+    "docs/verification_metropolis36/small_matrix_final_20261102.log",
+    "docs/verification_metropolis36/smoke1000.log",
+    "docs/verification_metropolis36/smoke1000_debug.log",
+    "docs/verification_metropolis36/smoke1000_journey.log",
+    "docs/verification_metropolis36/smoke1000_long.log",
+    "docs/verification_metropolis36/smoke1000_queue.log",
+    "docs/verification_metropolis36/smoke1000_queue_opt.log",
+    "docs/verification_metropolis36/smoke_full_1000.log",
+    "docs/verification_metropolis36/smoke_onboard_small.log",
+    "docs/verification_metropolis36/source_changes.json",
+    "docs/双层寻路实现与风险说明.md",
+    "docs/实际测试报告.md",
+    "docs/新版使用说明.md",
+    "scripts/benchmark_metropolis.py",
+    "scripts/continue_acceptance_after_current.ps1",
+    "scripts/run_acceptance.ps1",
+    "scripts/smoke_onboard_metropolis.py",
+    "scripts/verify_delivery.py",
+    "scripts/verify_small_matrix.py",
+    "scripts/write_acceptance_report.py",
+    "src/uav_sim/airspace/partition_contracts.py",
+    "src/uav_sim/airspace/partition_graph.py",
+    "src/uav_sim/airspace/partition_router.py",
+    "src/uav_sim/algorithms/continuous_motion.py",
+    "src/uav_sim/algorithms/continuous_safety.py",
+    "src/uav_sim/algorithms/fast_continuous_safety.py",
+    "src/uav_sim/algorithms/joint_reservations.py",
+    "src/uav_sim/algorithms/prefix_reservations.py",
+    "src/uav_sim/algorithms/regional_control.py",
+    "src/uav_sim/distributed/regional_backend.py",
+    "src/uav_sim/entities/partition_motion.py",
+    "src/uav_sim/entities/trajectory_profile.py",
+    "src/uav_sim/simulation/certified_journey.py",
+    "src/uav_sim/simulation/certified_traffic.py",
+    "src/uav_sim/simulation/destination_pool.py",
+    "src/uav_sim/simulation/journey_routes.py",
+    "src/uav_sim/simulation/metropolis_runtime.py",
+    "src/uav_sim/simulation/mission_features.py",
+    "src/uav_sim/simulation/population.py",
+    "src/uav_sim/utils/physical_clock.py",
+    "src/uav_sim/visualization/state_adapter.py",
+    "tests/enhanced/test_certified_journey.py",
+    "tests/enhanced/test_certified_runtime.py",
+    "tests/enhanced/test_cli_config.py",
+    "tests/enhanced/test_continuous_motion.py",
+    "tests/enhanced/test_continuous_safety.py",
+    "tests/enhanced/test_destination_pool.py",
+    "tests/enhanced/test_export_capacity_estimate.py",
+    "tests/enhanced/test_fast_continuous_safety.py",
+    "tests/enhanced/test_fast_reservation_scan.py",
+    "tests/enhanced/test_goal_lane_approach.py",
+    "tests/enhanced/test_gui_metropolis.py",
+    "tests/enhanced/test_joint_reservations.py",
+    "tests/enhanced/test_journey_routes.py",
+    "tests/enhanced/test_metropolis_runtime.py",
+    "tests/enhanced/test_mission_features.py",
+    "tests/enhanced/test_optional_feature_integration.py",
+    "tests/enhanced/test_partition_router.py",
+    "tests/enhanced/test_partition_topology.py",
+    "tests/enhanced/test_population.py",
+    "tests/enhanced/test_prefix_reservations.py",
+    "tests/enhanced/test_regional_backend.py",
+    "tests/enhanced/test_regional_control.py",
+    "tests/enhanced/test_state_adapter.py",
+    "tests/enhanced/test_trajectory_profile.py",
+    "tests/enhanced/test_uav_partition_motion.py"
+  ]
+}

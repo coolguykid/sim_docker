@@ -1,0 +1,150 @@
+{
+  "run_id": "20261117_124452_84e8960c",
+  "routing_mode": "centralized_regional",
+  "sim_dt_seconds": 1.0,
+  "generated": 8,
+  "departed": 8,
+  "arrived": 8,
+  "no_route": 0,
+  "active": 0,
+  "pending": 0,
+  "peak_active": 8,
+  "unfinished": 0,
+  "safety_violations": 0,
+  "hard_collisions": 0,
+  "audited_steps": 1753,
+  "backtrack_iterations": 0,
+  "deferred_departure_checks": 0,
+  "sim_time_seconds": 1753.0,
+  "last_arrival_time_seconds": 1752.0137570204122,
+  "mean_travel_seconds": 1193.8194902766606,
+  "p95_travel_seconds": 1630.013405771389,
+  "mean_ground_wait_seconds": 2.115162334031152,
+  "mean_airborne_hold_seconds": 0.0,
+  "max_goal_position_error_m": 0.0,
+  "wall_seconds": 0.8188248,
+  "failed": "",
+  "success": true,
+  "routing": {
+    "planning_calls": 115,
+    "requests": 116,
+    "map_loads": 115,
+    "cache_hits": 1,
+    "worker_count": 1,
+    "worker_pids": [
+      12232
+    ],
+    "private_planners": 0,
+    "calls": 112,
+    "use_ray": false,
+    "mode": "centralized_regional"
+  },
+  "destinations": {
+    "policy": "fixed",
+    "seed": 42,
+    "count": 3,
+    "manual": false,
+    "batches": [
+      {
+        "batch_index": 0,
+        "specs": [
+          {
+            "node_id": "GOAL_FIXED_0",
+            "pipe_id": 22,
+            "lane_id": 1,
+            "distance_m": 4812.7894487352
+          },
+          {
+            "node_id": "GOAL_FIXED_1",
+            "pipe_id": 21,
+            "lane_id": 0,
+            "distance_m": 23339.977788974313
+          },
+          {
+            "node_id": "GOAL_FIXED_2",
+            "pipe_id": 23,
+            "lane_id": 0,
+            "distance_m": 11457.113416935224
+          }
+        ]
+      }
+    ]
+  },
+  "execution_engine": "certified_journey",
+  "certified_prefixes": 8,
+  "partial_queue_prefixes": 0,
+  "candidate_profile_builds": 8,
+  "exact_motion_events": 216,
+  "reservation_retries": 8,
+  "continuous_phase_pairs_checked": 482,
+  "mean_prefix_wait_seconds": 2.115162334031152,
+  "max_prefix_wait_seconds": 10.406507674953176,
+  "blocked_requests": 0,
+  "reservations": {
+    "reservation_attempts": 8,
+    "accepted_count": 8,
+    "deferred_count": 0,
+    "shifted_count": 3,
+    "phase_pairs_checked": 482,
+    "spatial_candidate_count": 1204,
+    "max_shift_seconds": 10.406507674953176,
+    "native_scan_enabled": true,
+    "max_attempts": 4096,
+    "min_search_shift_seconds": 0.1,
+    "active_finite_phases": 0,
+    "active_holds": 0,
+    "active_uavs": 0,
+    "spatial_cell_count": 0,
+    "large_phase_count": 0,
+    "pending_count": 0
+  },
+  "ground_serialization_fallbacks": 0,
+  "ground_search_continuations": 0,
+  "max_admission_search_chunks": 16,
+  "journey_routing": {
+    "server_safety_forecast_enabled": true,
+    "server_safety_forecast_requests": 8,
+    "verified_regional_entry_plans": 108,
+    "server_safety_forecast_routing": {
+      "planning_calls": 116,
+      "requests": 8,
+      "map_loads": 116,
+      "cache_hits": 0,
+      "worker_count": 1,
+      "worker_pids": [
+        12232
+      ],
+      "private_planners": 0
+    }
+  },
+  "region_boundary_stop": true,
+  "guidance": {
+    "config": {
+      "enabled": true,
+      "evaluate": true,
+      "sample_interval_seconds": 20,
+      "density_limit": 1.0,
+      "capacity_scale": 0.015,
+      "gamma": 0.04,
+      "balance_weight": 10.0,
+      "intention_weight": 1.0,
+      "max_probability_change": 0.25,
+      "deviation_rate": 0.0,
+      "rollout_steps": 2,
+      "refinement_rounds": 3,
+      "overload_penalty": 2.0,
+      "edge_penalty_seconds": 60.0
+    },
+    "cell_count": 216,
+    "samples": 88,
+    "trigger_samples": 87,
+    "rejected_updates": 10,
+    "overloaded_cell_samples": 8,
+    "peak_actual_density": 3.0,
+    "peak_predicted_density": 3.0,
+    "guided_missions": 6,
+    "published_policies": 77,
+    "mean_spatial_density_variance": 0.0052759032249847385,
+    "overloaded_cell_sample_fraction": 0.00042087542087542086
+  }
+}

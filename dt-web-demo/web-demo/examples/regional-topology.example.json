@@ -1,0 +1,243 @@
+{
+  "schemaVersion": "regional-simulation-draft-0.1",
+  "type": "topology",
+  "requestId": "example-request-0",
+  "runId": "example-run-001",
+  "streamId": "example-stream-15-001",
+  "scope": {
+    "type": "region",
+    "regionId": "15"
+  },
+  "topologyVersion": "example-topology-001",
+  "snapshotId": "example-run-001:15:0",
+  "seq": 0,
+  "step": 0,
+  "simulationTimeSeconds": 0,
+  "simulationTime": "2026-10-20T02:00:00.000Z",
+  "sampleTime": "2026-10-20T02:00:00.000Z",
+  "serverTime": "2026-10-20T02:01:00.000Z",
+  "quality": {
+    "source": "mock",
+    "complete": true,
+    "missingObjects": []
+  },
+  "data": {
+    "metadata": {
+      "description": "仅演示JSON结构；2层2管道是缩减样例，不是项目完整拓扑或实际推演结果。",
+      "simulationClock": {
+        "startTime": "2026-10-20T02:00:00.000Z",
+        "stepDurationSeconds": 0.5,
+        "outputEverySteps": 4
+      },
+      "coordinate": {
+        "coordinateSystem": "local-ENU",
+        "axisOrder": [
+          "east",
+          "north",
+          "up"
+        ],
+        "origin": {
+          "referenceId": "example-region-15-origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        },
+        "horizontalUnit": "m",
+        "verticalUnit": "m",
+        "heightReference": "local-origin"
+      },
+      "units": {
+        "uavNumber": "aircraft",
+        "averageSpeed": "m/s",
+        "position": "m",
+        "flow": "aircraft/min",
+        "density": "aircraft/km",
+        "maxCapacity": "aircraft",
+        "speedLimit": "m/s",
+        "safeDistance": "m"
+      },
+      "metricDefinitions": {
+        "uavNumber": "同一仿真时刻位于该对象内的不同UAV数量",
+        "averageSpeed": "同一仿真时刻该对象内有效UAV标量速率的算术平均；空对象为null",
+        "density": null,
+        "flow": null,
+        "maxCapacity": null
+      },
+      "capabilities": {
+        "pipeState": true,
+        "uavPositions": true,
+        "rampState": true,
+        "laneState": false,
+        "freeFlight": false,
+        "flow": false,
+        "density": false,
+        "capacity": false,
+        "limits": false,
+        "predictions": false,
+        "strategyEvents": false,
+        "performance": false,
+        "transferEvents": false
+      },
+      "unavailableReasons": {
+        "flow": "尚未提供断面通过事件及统计窗口",
+        "density": "长度分母与指标口径尚未确认",
+        "capacity": "尚未提供容量定义和值",
+        "limits": "尚未提供限速和安全距离",
+        "freeFlight": "本缩减样例不包含自由飞和起降过程",
+        "predictions": "尚未提供预测模型输出",
+        "performance": "尚未采集算法耗时和评价指标"
+      },
+      "displayThresholds": null
+    },
+    "topology": {
+      "regionId": "15",
+      "versionId": "example-topology-001",
+      "validFrom": "2026-10-20T02:00:00.000Z",
+      "validTo": null,
+      "range": [
+        -20,
+        220,
+        -20,
+        80
+      ],
+      "neighbourhood": [],
+      "layers": [
+        {
+          "layerId": "L1",
+          "name": "示例层1",
+          "angle": 0,
+          "height": 200
+        },
+        {
+          "layerId": "L2",
+          "name": "示例层2",
+          "angle": 30,
+          "height": 220
+        }
+      ],
+      "nodes": [
+        {
+          "nodeId": "N1",
+          "layerId": "L1",
+          "position": [
+            0,
+            0,
+            200
+          ]
+        },
+        {
+          "nodeId": "N2",
+          "layerId": "L1",
+          "position": [
+            100,
+            0,
+            200
+          ]
+        },
+        {
+          "nodeId": "N3",
+          "layerId": "L2",
+          "position": [
+            100,
+            0,
+            220
+          ]
+        },
+        {
+          "nodeId": "N4",
+          "layerId": "L2",
+          "position": [
+            186.6025403784,
+            50,
+            220
+          ]
+        }
+      ],
+      "pipes": [
+        {
+          "pipeId": "P1",
+          "layerId": "L1",
+          "startNodeId": "N1",
+          "endNodeId": "N2",
+          "length": 100,
+          "laneNumber": 1,
+          "pipeWidth": 6,
+          "type": "main"
+        },
+        {
+          "pipeId": "P2",
+          "layerId": "L2",
+          "startNodeId": "N3",
+          "endNodeId": "N4",
+          "length": 100,
+          "laneNumber": 1,
+          "pipeWidth": 6,
+          "type": "main"
+        }
+      ],
+      "ramps": [
+        {
+          "rampId": "RAMP1",
+          "startNodeId": "N2",
+          "endNodeId": "N3",
+          "sourceRegionId": "15",
+          "targetRegionId": "15",
+          "path": [
+            [
+              100,
+              0,
+              200
+            ],
+            [
+              105,
+              0,
+              210
+            ],
+            [
+              100,
+              0,
+              220
+            ]
+          ],
+          "length": 22.360679774997898
+        }
+      ],
+      "lanes": [
+        {
+          "laneId": "LANE1",
+          "pipeId": "P1",
+          "startPt": [
+            0,
+            0,
+            200
+          ],
+          "endPt": [
+            100,
+            0,
+            200
+          ]
+        },
+        {
+          "laneId": "LANE2",
+          "pipeId": "P2",
+          "startPt": [
+            100,
+            0,
+            220
+          ],
+          "endPt": [
+            186.6025403784,
+            50,
+            220
+          ]
+        }
+      ],
+      "boundary": null,
+      "noFlyZones": null,
+      "freeFlightAreas": null,
+      "funnels": null
+    }
+  }
+}

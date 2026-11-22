@@ -1,0 +1,25 @@
+{
+  "airspace_mode": "metropolis",
+  "routing_mode": "centralized_regional",
+  "sim_dt_seconds": 1.0,
+  "num_pipes_per_layer": 4,
+  "num_lanes_per_pipe": 4,
+  "include_dynamic": false,
+  "num_uavs": 8,
+  "mission_limit": 8,
+  "max_batch_size": 2,
+  "max_sim_time_seconds": 160,
+  "drain_timeout_seconds": 9000,
+  "replenishment_period_seconds": 40,
+  "destination_count": 3,
+  "random_seed": 42,
+  "guidance": {
+    "enabled": true,
+    "evaluate": true,
+    "sample_interval_seconds": 20,
+    "capacity_scale": 0.015,
+    "gamma": 0.04,
+    "rollout_steps": 2,
+    "edge_penalty_seconds": 60.0
+  }
+}

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>低空航路网 · 宏观结构与可支持通过量控制</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2f6;color:#182e40;font:14px/1.6 "Microsoft YaHei",sans-serif}main{max-width:1500px;margin:auto;padding:26px}h1{font-size:26px;margin:0}h2{font-size:17px;margin:0 0 12px}p{margin:6px 0 14px;color:#536879}header{margin-bottom:20px}.stats{display:flex;gap:24px;flex-wrap:wrap;margin-top:15px}.stats b{font-size:23px;display:block;color:#006d77}.layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(310px,1fr);gap:18px}.panel{background:white;border:1px solid #d5e1e8;border-radius:12px;padding:18px;margin-bottom:18px}label{display:inline-flex;align-items:center;gap:6px;margin:4px 14px 4px 0}select,button{font:inherit;border:1px solid #b8ccd6;border-radius:6px;padding:5px 9px;background:#fff;color:#182e40}button{cursor:pointer}button.active{background:#006d77;color:white}canvas{width:100%;display:block}#scene{height:490px;cursor:grab;background:#f7fafc;border-radius:8px}summary{cursor:pointer;font-size:15px;font-weight:600}details[open] summary{margin-bottom:12px}.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:8px 0}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}#selection{overflow-wrap:anywhere;font-size:13px}#heatmap{display:grid;gap:5px}.cell{font-size:11px;text-align:center;padding:7px 2px;border-radius:5px;cursor:pointer}.cell strong{display:block;font-size:13px}#log{max-height:260px;overflow:auto;font-size:12px}#log div{padding:7px 0;border-bottom:1px solid #e5edf2;overflow-wrap:anywhere}.muted{font-size:12px;color:#637889}#timeline{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}@media(max-width:950px){.layout{grid-template-columns:1fr}main{padding:14px}#scene{height:400px}}
+</style></head><body><main>
+<header><a id="flightPreview" style="float:right;color:#006d77" href="simulation.html">无人机运行与调整对比 →</a><h1>低空航路网</h1><p>六个方向层 · 连续管道与成对启停 · 窗口实际吞吐量触发调整</p><div class="stats" id="stats"></div></header>
+<div class="layout"><div><section class="panel"><h2>结构与运行状态</h2><button id="spacingPreset" style="margin-bottom:10px"></button><span id="spacingInfo" class="muted" style="margin-left:10px"></span>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button id="playDemo">▶ 播放扩容与恢复</button><button id="restartDemo">回到初始布局</button><span id="playStatus" class="muted" aria-live="polite"></span></div>
+<div id="timeline"></div><div id="changeSummary" style="margin-bottom:10px;color:#006d77" aria-live="polite"></div><div>
+
+<label>方向层<select id="layer"><option value="all">全部六层</option></select></label>
+<label><input id="closed" type="checkbox">显示关闭管道</label>
+<label><input id="ramps" type="checkbox" checked>显示所选段关联匝道</label>
+<div style="display:flex;align-items:center;gap:6px;margin:6px 0"><button id="view">切换俯视 / 三维</button><button id="panMode" aria-pressed="false">平移</button><button id="resetView">恢复视角</button><button id="zoomOut" aria-label="缩小">−</button><span id="zoomValue" class="muted" style="min-width:40px;text-align:center">100%</span><button id="zoomIn" aria-label="放大">＋</button></div></div>
+
+<div id="regionCounts" class="muted"></div>
+<canvas id="scene" aria-label="可拖动旋转、平移和缩放的六层航路网"></canvas>
+<div class="legend" id="legend"></div><div class="legend"><span style="color:#119861">━━ 绿色：扩容管道对</span><span style="color:#df5260">┄┄ 红色渐隐：正在撤回</span><span style="color:#1262d4">蓝色：掉头连接</span></div><p class="muted">单击管道选中 · 左键拖动旋转 · 平移按钮 / 右键 / Shift+拖动平移 · 滚轮或 ＋/− 缩放 · 点击右侧方格切换区域</p><div id="selection"></div><div id="reverseStatus" class="muted"></div>
+</section><details class="panel"><summary>调整记录</summary><div id="log"></div></details></div>
+<aside><section class="panel"><h2>区域当前负荷</h2><button id="allRegions" style="width:100%;margin-bottom:10px">总体 · 全局</button><div id="heatmap"></div><p class="muted">实际通过量 / 可支持通过量（架次/窗口）。</p></section>
+<details class="panel"><summary>配置详情</summary><div id="config"></div><div id="layoutState" class="muted"></div><p class="muted">合成的窗口实际通过量由外部给定，不模拟无人机流动。扩缩容作用于整根管道对，各区域方案取并集；仍有无人机或被其他区域引用的管道不会被截断。层间匝道竖直连接，同层匝道水平直连。</p></details></aside></div>
+</main><script>
+const D=__NETWORK_DATA__;
+const $=id=>document.getElementById(id), colors=['#167ba6','#17a89b','#7882b8','#ac6db1','#bb843b','#5e9165'];
+// 演示仅展示初始、扩容和恢复；后台控制步骤仍完整保留。
+D.frames=D.frames.filter((f,i)=>i!==1&&i!==2);
+let hitSegments=[];
+let frame=0, topView=false, selected=D.focus, selectedRegion=D.segments[D.focus].region, zoom=1, panX=0, panY=0, panMode=false;
+// 四元数轨迹球：旋转整个三维坐标，不固定高度投影或锁定俯仰角。
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function normalizeQ(q){const n=Math.hypot(...q);return q.map(v=>v/n)}
+function multiplyQ(a,b){return [a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]]}
+const defaultOrientation=multiplyQ([Math.cos(-.55),Math.sin(-.55),0,0],[Math.cos(-.25),0,0,Math.sin(-.25)]);
+let orientation=defaultOrientation.slice();
+function rotate3(v){const u=orientation.slice(1),t=cross(u,v).map(x=>2*x),c=cross(u,t);return v.map((x,i)=>x+orientation[0]*t[i]+c[i])}
+function trackballPoint(e){const r=$('scene').getBoundingClientRect(),radius=Math.min(r.width,r.height)*.45,x=(e.clientX-r.left-r.width/2)/radius,y=-(e.clientY-r.top-r.height/2)/radius,n=Math.hypot(x,y);return n<=1?[x,y,Math.sqrt(Math.max(0,1-n*n))]:[x/n,y/n,0]}
+function rotationBetween(a,b){const dot=Math.max(-1,Math.min(1,a.reduce((s,x,i)=>s+x*b[i],0)));if(dot<-.999999){const axis=cross(a,Math.abs(a[0])<.9?[1,0,0]:[0,1,0]);return normalizeQ([0,...axis])}return normalizeQ([1+dot,...cross(a,b)])}
+const F=()=>D.frames[frame], regionIds=Object.keys(F().region_totals);
+let opened=new Set(F().open_pipes);
+const initialOpened=new Set(D.frames[0].open_pipes);
+let playing=false,playTimer=null,animationId=null,animationProgress=1,addedPipes=new Set(),removedPipes=new Set();
+function stopPlayback(){playing=false;clearTimeout(playTimer);playTimer=null;$('playDemo').textContent='▶ 播放扩容与恢复'}
+function schedulePlayback(){playTimer=setTimeout(()=>{if(!playing)return;if(frame===D.frames.length-1){stopPlayback();render();return}showFrame(frame+1);schedulePlayback()},1900)}
+function showFrame(index){
+ const previous=opened;frame=index;opened=new Set(F().open_pipes);
+ addedPipes=new Set([...opened].filter(p=>!previous.has(p)));removedPipes=new Set([...previous].filter(p=>!opened.has(p)));
+ ensureSelection();cancelAnimationFrame(animationId);animationProgress=(addedPipes.size||removedPipes.size)?0:1;render();
+ if(animationProgress<1){const start=performance.now();let last=0;const tick=now=>{if(now-last>30){animationProgress=Math.min(1,(now-start)/1200);render();last=now}if(animationProgress<1)animationId=requestAnimationFrame(tick)};animationId=requestAnimationFrame(tick)}
+}
+$('playDemo').onclick=()=>{if(playing){stopPlayback();render();return}if(frame===D.frames.length-1)showFrame(0);playing=true;$('playDemo').textContent='⏸ 暂停演示';render();schedulePlayback()};
+$('restartDemo').onclick=()=>{stopPlayback();showFrame(0)};
+
+for(const l of D.layers)$('layer').add(new Option(`${l.angle_deg}° · ${l.height_m} m`,l.id));
+
+$('spacingPreset').textContent=D.comparison_label;$('spacingPreset').onclick=()=>{stopPlayback();location.href=D.comparison_url};
+$('flightPreview').href=D.comparison_url.startsWith('../')?'../simulation.html':'simulation.html';
+$('spacingInfo').textContent=`L = ${D.config.pair_spacing_m.toFixed(0)} m · 各方向相同`;
+$('legend').innerHTML=D.layers.map(l=>`<span><i class="dot" style="background:${colors[l.id]}"></i>${l.angle_deg}° / ${l.height_m}m</span>`).join('');
+$('config').innerHTML=`边界：${D.config.boundary_m/1000} × ${D.config.boundary_m/1000} km<br>网格：${D.config.grid_n} × ${D.config.grid_n}<br>恢复阈值：${D.config.reopen_ratio*100}%<br>参考密度：每 ${D.config.reference_width_m/1000} km 横向 ${D.config.pipes_per_reference_width} 根<br>L = 全层统一的管道对间距<br>初始：全域等间距，参考 R${D.config.grid_n}-1<br>管道对间距：${D.config.pair_spacing_m} m<br>掉头连接间距：${D.config.reverse_ramp_spacing_m} m<br>扩容：间隙中点二叉细分，浅层优先<br>缩容：末端节点，深层优先`;
+$('timeline').innerHTML=D.frames.map((f,i)=>`<button data-frame="${i}">${i+1}. ${f.label}</button>`).join('');
+$('timeline').onclick=e=>{if(e.target.dataset.frame!==undefined){stopPlayback();showFrame(+e.target.dataset.frame)}};
+function visible(s){const p=D.pipes[s.pipe];return (selectedRegion==='all'||s.region===selectedRegion)&&($('layer').value==='all'||p.layer===+$('layer').value)&&(opened.has(s.pipe)||$('closed').checked)}
+function ensureSelection(){if(!selected||!visible(D.segments[selected]))selected=Object.keys(D.segments).find(id=>visible(D.segments[id]))||null}
+for(const id of ['layer','closed'])$(id).onchange=()=>{ensureSelection();render()};
+$('ramps').onchange=render;
+$('view').onclick=()=>{topView=!topView;orientation=topView?[1,0,0,0]:defaultOrientation.slice();render()};
+$('resetView').onclick=()=>{topView=false;orientation=defaultOrientation.slice();zoom=1;panX=panY=0;render()};
+function setZoom(value){zoom=Math.max(.25,Math.min(8,value));render()}
+$('zoomIn').onclick=()=>setZoom(zoom*1.25);$('zoomOut').onclick=()=>setZoom(zoom/1.25);
+$('scene').addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?400:1);setZoom(zoom*Math.exp(-Math.max(-300,Math.min(300,delta))*.002))},{passive:false});
+function surface(id){const c=$(id),r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=r.height*dpr;const ctx=c.getContext('2d');ctx.scale(dpr,dpr);return [ctx,r.width,r.height]}
+function render(){
+ const extra=[...opened].filter(p=>!initialOpened.has(p)).length;
+ $('playStatus').textContent=`${playing?'播放中':'当前'} ${frame+1}/${D.frames.length} · 仿真 t=${F().time}s`;
+ $('changeSummary').textContent=`${F().label}｜开放 ${opened.size/2} 对（${opened.size}根）｜较初始新增 ${extra/2} 对`+(frame===D.frames.length-1&&F().restored?'｜已完整恢复初始管道开关布局':'');
+ $('stats').innerHTML=[['方向层',6],['开放管道对',opened.size/2],['较初始新增',extra/2]].map(([k,v])=>`<div>${k}<b>${v.toLocaleString()}</b></div>`).join('');
+ const [ctx,w,h]=surface('scene'), rid=selectedRegion, cell=D.config.boundary_m/D.config.grid_n, half=D.config.boundary_m/2;
+ let cx=0,cy=0,span=D.config.boundary_m;
+ if(rid!=='all'){const [row,col]=rid.slice(1).split('-').map(Number);cx=-half+(col-.5)*cell;cy=-half+(row-.5)*cell;span=cell}
+ const heightScale=2,centerZ=(D.layers[0].height_m+D.layers[D.layers.length-1].height_m)/2;
+ const scale=zoom*.88*Math.min(w,h)/Math.hypot(Math.SQRT2*span,2*centerZ*heightScale);
+ function project(p){const v=rotate3([p[0]-cx,p[1]-cy,(p[2]-centerZ)*heightScale]);return [w/2+panX+v[0]*scale,h/2+panY-v[1]*scale]}
+ function line(a,b,color,width=1,dash=[]){a=project(a);b=project(b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+ ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();
+ for(let k=0;k<=D.config.grid_n;k++){const v=-half+k*cell;line([v,-half,0],[v,half,0],'#c8d6df');line([-half,v,0],[half,v,0],'#c8d6df')}
+ const visibleEntries=Object.entries(D.segments).filter(([id,s])=>visible(s));
+ hitSegments=visibleEntries.map(([id,s])=>({id,a:project(s.a),b:project(s.b)}));
+ for(const [id,s] of visibleEntries){const p=D.pipes[s.pipe];if(id===selected)continue;const extra=opened.has(s.pipe)&&!initialOpened.has(s.pipe);ctx.globalAlpha=addedPipes.has(s.pipe)?.2+.8*animationProgress:1;line(s.a,s.b,extra?'#119861':opened.has(s.pipe)?colors[p.layer]:'#dce4e9',extra?2.8:opened.has(s.pipe)?1.05:.5);ctx.globalAlpha=1}
+ if(animationProgress<1){ctx.globalAlpha=1-animationProgress;for(const s of Object.values(D.segments)){if(removedPipes.has(s.pipe)&&(rid==='all'||s.region===rid)&&($('layer').value==='all'||D.pipes[s.pipe].layer===+$('layer').value))line(s.a,s.b,'#df5260',3,[6,4])}ctx.globalAlpha=1}
+ const reverseRamps=selected?D.ramps.filter(r=>r.kind==='reverse'&&(r.source===selected||r.target===selected)):[];
+ const rampAllowed=r=>opened.has(D.segments[r.source].pipe)&&opened.has(D.segments[r.target].pipe)&&!F().blocked_targets.includes(r.target);
+ if(selected&&$('ramps').checked){for(const r of D.ramps){if(r.kind==='reverse'||(r.source!==selected&&r.target!==selected))continue;if(!opened.has(D.segments[r.source].pipe)||!opened.has(D.segments[r.target].pipe))continue;const blocked=F().blocked_targets.includes(r.target);line(r.points[0],r.points[1],blocked?'#d83f47':'#9b53bf',1.15,blocked?[4,4]:[])}}
+ if(selected){const s=D.segments[selected];line(s.a,s.b,'#ef871d',3)}
+ // 箭头沿选中管道及可见开放管道显示。
+ for(const [id,s] of visibleEntries){if(!opened.has(s.pipe))continue;const a=project(s.a),b=project(s.b),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,ang=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=id===selected?'#ef871d':colors[D.pipes[s.pipe].layer];ctx.beginPath();ctx.moveTo(mx+4*Math.cos(ang),my+4*Math.sin(ang));ctx.lineTo(mx+3*Math.cos(ang+2.5),my+3*Math.sin(ang+2.5));ctx.lineTo(mx+3*Math.cos(ang-2.5),my+3*Math.sin(ang-2.5));ctx.fill()}
+ if($('ramps').checked){
+   const groups=new Map();
+   for(const r of reverseRamps){const key=[r.source,r.target].sort().join('|')+'#'+r.station;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)}
+   for(const group of groups.values()){
+     const r=group[0],a=project(r.points[0]),b=project(r.points[1]),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+     const count=group.filter(rampAllowed).length,color=count?'#1262d4':'#d83f47';
+     line(r.points[0],r.points[1],color,2,count===2?[]:[3,3]);
+     ctx.fillStyle='#fff';ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx,my,3,0,Math.PI*2);ctx.fill();ctx.stroke();
+   }
+ }
+ ctx.restore();ctx.fillStyle='#536879';ctx.font='12px sans-serif';ctx.fillText(`${topView?'俯视':'自由三维旋转 · 高度×2'} / ${rid==='all'?'全域':rid} / 可见 ${visibleEntries.length} 段`,12,22);
+ document.querySelectorAll('[data-frame]').forEach(b=>b.classList.toggle('active',+b.dataset.frame===frame));
+ if(selected){const s=D.segments[selected],p=D.pipes[s.pipe],v=F().speeds[s.pipe],cap=F().throughputs[selected],n=F().flows[selected]||0;$('selection').textContent=`${selected} | ${p.direction===1?'正向':'反向'} | 配对 ${p.pair} | ${v.toFixed(2)} m/s | 间距 ${F().spacings[s.pipe].toFixed(1)} m | 长度 ${s.length_m.toFixed(0)} m | 实际通过量 ${n} / 可支持通过量 ${cap.toFixed(1)} 架次/窗口 | ${F().blocked_targets.includes(selected)?'汇入匝道拥堵锁定':'无拥堵锁'}`}else $('selection').textContent='当前筛选下没有管道段';
+ $('reverseStatus').textContent=reverseRamps.length?`掉头连接间距 ${D.config.reverse_ramp_spacing_m} m · 当前段关联 ${reverseRamps.length} 条有向匝道，其中 ${reverseRamps.filter(rampAllowed).length} 条开放`:'';
+ $('layoutState').textContent=Object.entries(F().layouts).filter(([id])=>rid==='all'||id.startsWith(rid+'/')).map(([id,l])=>`${id}: k=${l.k}，L=${l.spacing_m.toFixed(2)}m`).join('；');
+ $('regionCounts').textContent=rid==='all'?'选择一个区域可核对各层实际开放数量':D.layers.map(l=>{const segs=Object.values(D.segments).filter(s=>s.region===rid&&D.pipes[s.pipe].layer===l.id&&opened.has(s.pipe));return `${l.angle_deg}°：${new Set(segs.map(s=>D.pipes[s.pipe].pair)).size}对 / ${segs.length}根`}).join('　');
+ $('heatmap').style.gridTemplateColumns=`repeat(${D.config.grid_n},1fr)`;
+ $('heatmap').innerHTML=regionIds.slice().reverse().sort((a,b)=>{const A=a.slice(1).split('-').map(Number),B=b.slice(1).split('-').map(Number);return B[0]-A[0]||A[1]-B[1]}).map(id=>{const [n,c]=F().region_totals[id],ratio=c?n/c:n>0?Infinity:0;return `<div class="cell" data-region="${id}" style="background:${ratio>=1?'#f4c5c5':'#d4ebe9'};outline:${id===rid?'2px solid #006d77':'none'}"><strong>${id}</strong>${n.toFixed(0)} / ${c.toFixed(0)}</div>`}).join('');
+ const totals=Object.values(F().region_totals).reduce((a,v)=>[a[0]+v[0],a[1]+v[1]],[0,0]);
+ $('allRegions').textContent=`总体 · ${totals[0].toFixed(0)} / ${totals[1].toFixed(0)}`;
+ $('allRegions').classList.toggle('active',rid==='all');$('allRegions').setAttribute('aria-pressed',String(rid==='all'));
+ $('zoomValue').textContent=`${Math.round(zoom*100)}%`;
+ const names={speed_changed:'调整管道速度',speed_recovered:'恢复管道速度',ramps_closed:'关闭汇入匝道',ramps_reopened:'解除汇入拥堵锁',unresolved:'管道段实际通过量仍超通过能力',pairs_expanded:'整根管道对扩容',pairs_shrunk:'整根管道对缩容',expansion_exhausted:'扩容方案已用尽',retained_pair_closed:'延后关闭的管道对已撤回',closed_pipe_flow:'关闭管道仍有窗口通过记录'};
+ $('log').replaceChildren(...F().events.map(e=>{const el=document.createElement('div');el.textContent=`t=${e.time_s}s · ${names[e.action]} · ${e.segment_id} · ${JSON.stringify(e.details)}`;return el}));if(!F().events.length)$('log').textContent='本步没有触发调整。';
+
+}
+$('heatmap').onclick=e=>{const el=e.target.closest('[data-region]');if(el){selectRegion(el.dataset.region)}};
+function selectRegion(id){selectedRegion=id;zoom=1;panX=panY=0;ensureSelection();render()}
+$('allRegions').onclick=()=>selectRegion('all');
+$('panMode').onclick=()=>{panMode=!panMode;$('panMode').classList.toggle('active',panMode);$('panMode').setAttribute('aria-pressed',String(panMode));$('scene').style.cursor=panMode?'move':'grab'};
+let drag=null;
+$('scene').style.touchAction='none';
+$('scene').oncontextmenu=e=>e.preventDefault();
+function pickSegment(e){
+ const rect=$('scene').getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
+ let best=null,bestDistance=7;
+ for(const {id,a,b} of hitSegments){
+   const dx=b[0]-a[0],dy=b[1]-a[1],length2=dx*dx+dy*dy;
+   const t=length2?Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/length2)):0;
+   const distance=Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy);
+   if(distance<bestDistance){best=id;bestDistance=distance}
+ }
+ if(best){selected=best;render()}
+}
+$('scene').onpointerdown=e=>{
+ if(!e.isPrimary||![0,2].includes(e.button))return;
+ drag={id:e.pointerId,button:e.button,moved:false,startX:e.clientX,startY:e.clientY,pan:panMode||e.button===2||e.shiftKey,x:e.clientX,y:e.clientY,point:trackballPoint(e)};
+ $('scene').setPointerCapture(e.pointerId);$('scene').style.cursor=drag.pan?'move':'grabbing';e.preventDefault();
+};
+$('scene').onpointermove=e=>{
+ if(!drag||drag.id!==e.pointerId)return;
+ if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<=4)return;
+ drag.moved=true;
+ if(drag.pan){panX+=e.clientX-drag.x;panY+=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY}
+ else{const next=trackballPoint(e);orientation=normalizeQ(multiplyQ(rotationBetween(drag.point,next),orientation));drag.point=next;topView=false}
+ render();
+};
+function endDrag(e){
+ if(!drag||drag.id!==e.pointerId)return;
+ const click=e.type==='pointerup'&&drag.button===0&&!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<=4;
+ drag=null;$('scene').style.cursor=panMode?'move':'grab';
+ if($('scene').hasPointerCapture(e.pointerId))$('scene').releasePointerCapture(e.pointerId);
+ if(click)pickSegment(e);
+}
+$('scene').onpointerup=endDrag;$('scene').onpointercancel=endDrag;$('scene').onlostpointercapture=endDrag;
+window.addEventListener('resize',render);window.addEventListener('pagehide',()=>{stopPlayback();cancelAnimationFrame(animationId)});ensureSelection();render();
+</script></body></html>

@@ -1,0 +1,41 @@
+         181039865 function calls (181039727 primitive calls) in 33.876 seconds
+
+   Ordered by: cumulative time
+   List reduced from 98 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      100    1.326    0.013   35.208    0.352 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\prefix_reservations.py:357(reserve)
+  8627551    3.024    0.000   29.486    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\prefix_reservations.py:329(_conflict)
+   634920    3.622    0.000   23.865    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:142(min_distance)
+   634918    1.917    0.000    4.126    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:110(_unit_interval_roots)
+  1326164    1.257    0.000    3.662    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:68(position_at)
+  3370874    1.414    0.000    3.649    0.000 {built-in method builtins.all}
+  1284201    1.108    0.000    3.106    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:76(velocity_at)
+ 10024795    1.031    0.000    2.958    0.000 {built-in method builtins.min}
+   318047    0.257    0.000    2.942    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\prefix_reservations.py:434(candidate_at)
+  3174590    0.841    0.000    2.613    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:163(dot)
+     2017    0.040    0.000    2.540    0.001 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\prefix_reservations.py:488(candidates)
+   269188    0.054    0.000    2.483    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\prefix_reservations.py:489(<genexpr>)
+ 12466546    1.530    0.000    2.333    0.000 {built-in method builtins.max}
+   318807    0.517    0.000    2.177    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:50(__post_init__)
+  2242164    1.170    0.000    1.925    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:167(<genexpr>)
+  3174590    1.018    0.000    1.772    0.000 {built-in method math.fsum}
+   956421    0.615    0.000    1.473    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:31(_vector)
+  2539672    0.848    0.000    1.271    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:162(<genexpr>)
+  6117242    0.912    0.000    1.147    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:21(_finite)
+  2610365    0.549    0.000    1.121    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:62(_elapsed)
+  1208226    0.307    0.000    0.884    0.000 {built-in method builtins.any}
+  6349200    0.638    0.000    0.834    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:157(<genexpr>)
+  3825684    0.355    0.000    0.820    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:38(<genexpr>)
+  6349200    0.589    0.000    0.803    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:159(<genexpr>)
+ 20584872    0.764    0.000    0.764    0.000 {built-in method math.isfinite}
+ 12698360    0.754    0.000    0.754    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:164(<genexpr>)
+  5304656    0.568    0.000    0.720    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:72(<genexpr>)
+  8951401    0.712    0.000    0.712    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:119(polynomial)
+   634918    0.449    0.000    0.649    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:93(_quadratic_roots)
+  5136804    0.499    0.000    0.635    0.000 D:\无人机_大都会36区_第一版增强\src\uav_sim\algorithms\continuous_safety.py:79(<genexpr>)
+
+
+
+{'reservation_attempts': 100, 'accepted_count': 100, 'deferred_count': 0, 'shifted_count': 81, 'phase_pairs_checked': 634920, 'spatial_candidate_count': 378211, 'max_shift_seconds': 112.92238568352444, 'active_finite_phases': 13701, 'active_holds': 0, 'active_uavs': 100, 'spatial_cell_count': 45041, 'large_phase_count': 0, 'pending_count': 0}
+accepted 100

@@ -1,0 +1,117 @@
+{
+  "delta": {
+    "generated": {
+      "baseline": 8,
+      "guided": 8,
+      "delta": 0
+    },
+    "arrived": {
+      "baseline": 8,
+      "guided": 8,
+      "delta": 0
+    },
+    "mean_travel_seconds": {
+      "baseline": 1057.46937757466,
+      "guided": 1193.8194902766606,
+      "delta": 136.35011270200062
+    },
+    "mean_ground_wait_seconds": {
+      "baseline": 12.811128346067978,
+      "guided": 2.115162334031152,
+      "delta": -10.695966012036827
+    },
+    "safety_violations": {
+      "baseline": 0,
+      "guided": 0,
+      "delta": 0
+    },
+    "peak_actual_density": {
+      "baseline": 4.0,
+      "guided": 3.0,
+      "delta": -1.0
+    },
+    "mean_spatial_density_variance": {
+      "baseline": 0.007715785809506018,
+      "guided": 0.0052759032249847385,
+      "delta": -0.0024398825845212795
+    },
+    "overloaded_cell_samples": {
+      "baseline": 12,
+      "guided": 8,
+      "delta": -4
+    },
+    "overloaded_cell_sample_fraction": {
+      "baseline": 0.0006858710562414266,
+      "guided": 0.00042087542087542086,
+      "delta": -0.0002649956353660057
+    }
+  },
+  "rerouted_uav_ids": [
+    7,
+    3
+  ],
+  "baseline": {
+    "output_dir": "D:\\无人机_大都会36区_导引版\\artifacts\\runs\\20261117_124451_370d20ef\\algorithm_1",
+    "guidance": {
+      "config": {
+        "enabled": false,
+        "evaluate": true,
+        "sample_interval_seconds": 20,
+        "density_limit": 1.0,
+        "capacity_scale": 0.015,
+        "gamma": 0.04,
+        "balance_weight": 10.0,
+        "intention_weight": 1.0,
+        "max_probability_change": 0.25,
+        "deviation_rate": 0.0,
+        "rollout_steps": 2,
+        "refinement_rounds": 3,
+        "overload_penalty": 2.0,
+        "edge_penalty_seconds": 60.0
+      },
+      "cell_count": 216,
+      "samples": 81,
+      "trigger_samples": 78,
+      "rejected_updates": 0,
+      "overloaded_cell_samples": 12,
+      "peak_actual_density": 4.0,
+      "peak_predicted_density": 4.0,
+      "guided_missions": 0,
+      "published_policies": 0,
+      "mean_spatial_density_variance": 0.007715785809506018,
+      "overloaded_cell_sample_fraction": 0.0006858710562414266
+    }
+  },
+  "guided": {
+    "output_dir": "D:\\无人机_大都会36区_导引版\\artifacts\\runs\\20261117_124452_84e8960c\\algorithm_1",
+    "guidance": {
+      "config": {
+        "enabled": true,
+        "evaluate": true,
+        "sample_interval_seconds": 20,
+        "density_limit": 1.0,
+        "capacity_scale": 0.015,
+        "gamma": 0.04,
+        "balance_weight": 10.0,
+        "intention_weight": 1.0,
+        "max_probability_change": 0.25,
+        "deviation_rate": 0.0,
+        "rollout_steps": 2,
+        "refinement_rounds": 3,
+        "overload_penalty": 2.0,
+        "edge_penalty_seconds": 60.0
+      },
+      "cell_count": 216,
+      "samples": 88,
+      "trigger_samples": 87,
+      "rejected_updates": 10,
+      "overloaded_cell_samples": 8,
+      "peak_actual_density": 3.0,
+      "peak_predicted_density": 3.0,
+      "guided_missions": 6,
+      "published_policies": 77,
+      "mean_spatial_density_variance": 0.0052759032249847385,
+      "overloaded_cell_sample_fraction": 0.00042087542087542086
+    }
+  }
+}

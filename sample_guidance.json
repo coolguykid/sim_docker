@@ -1,0 +1,20 @@
+{
+  "run_id": "region01_framework_001",
+  "attempt_id": 0,
+  "region_id": 1,
+  "snapshot_time": "2026-11-05T15:00:00+08:00",
+  "topology_version": 1,
+  "horizon_seconds": 10,
+  "step_seconds": 1.0,
+  "random_seed": 42,
+  "max_adjustment_rounds": 3,
+  "transfers": [
+    {
+      "source_layer": 1,
+      "target_region_id": 2,
+      "target_layer": 1,
+      "proportion": 1.0
+    }
+  ],
+  "topology_adjustments": {}
+}

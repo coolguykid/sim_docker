@@ -1,0 +1,50 @@
+[
+  {
+    "mode": "native_full_scan",
+    "missions": 100,
+    "seconds": 2.1937276,
+    "metrics": {
+      "reservation_attempts": 100,
+      "accepted_count": 100,
+      "deferred_count": 0,
+      "shifted_count": 81,
+      "phase_pairs_checked": 636629,
+      "spatial_candidate_count": 380616,
+      "max_shift_seconds": 112.92238568352444,
+      "native_scan_enabled": true,
+      "max_attempts": 256,
+      "min_search_shift_seconds": 0.0,
+      "active_finite_phases": 13831,
+      "active_holds": 0,
+      "active_uavs": 100,
+      "spatial_cell_count": 44774,
+      "large_phase_count": 0,
+      "pending_count": 0
+    },
+    "maximum_departure": 112.92238568352444
+  },
+  {
+    "mode": "native_static_pruned_earliest",
+    "missions": 100,
+    "seconds": 1.4533157,
+    "metrics": {
+      "reservation_attempts": 100,
+      "accepted_count": 100,
+      "deferred_count": 0,
+      "shifted_count": 81,
+      "phase_pairs_checked": 132694,
+      "spatial_candidate_count": 380616,
+      "max_shift_seconds": 112.92238568352444,
+      "native_scan_enabled": true,
+      "max_attempts": 256,
+      "min_search_shift_seconds": 0.0,
+      "active_finite_phases": 13831,
+      "active_holds": 0,
+      "active_uavs": 100,
+      "spatial_cell_count": 44774,
+      "large_phase_count": 0,
+      "pending_count": 0
+    },
+    "maximum_departure": 112.92238568352444
+  }
+]

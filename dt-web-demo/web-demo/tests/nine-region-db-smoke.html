@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Nine regional Docker topology smoke test</title>
+<!-- REGION_DB_TOPOLOGY: browser smoke test for R01–R09; not review UI. -->
+<pre id="result">RUNNING</pre>
+<iframe id="app" src="../index.html" style="width:1280px;height:800px"></iframe>
+<script>
+const result=document.getElementById('result'),frame=document.getElementById('app');
+const waitFor=(predicate,timeout=15000)=>new Promise((resolve,reject)=>{const deadline=Date.now()+timeout,timer=setInterval(()=>{if(predicate()){clearInterval(timer);resolve();}else if(Date.now()>deadline){clearInterval(timer);reject(Error('timeout'));}},100);});
+frame.addEventListener('load',async()=>{
+  const doc=frame.contentDocument,select=doc.getElementById('regionSelect');
+  doc.querySelector('[data-view="region"]').click();
+  const verified=[];
+  try{
+    for(let regionId=1;regionId<=9;regionId++){
+      select.value=String(regionId-1);select.dispatchEvent(new Event('change',{bubbles:true}));
+      await waitFor(()=>doc.getElementById('rdVisible')?.textContent.includes(`区域${regionId}数据库真实拓扑`));
+      const expected=`R${String(regionId).padStart(2,'0')}`;
+      if(!doc.getElementById('rdScope')?.textContent.includes(expected))throw Error(`scope mismatch ${expected}`);
+      verified.push(expected);
+    }
+    // R10 is intentionally not provisioned and must return to offline mode.
+    select.value='9';select.dispatchEvent(new Event('change',{bubbles:true}));
+    await waitFor(()=>!doc.getElementById('rdScope')?.textContent.includes('数据库拓扑'));
+    result.textContent=`PASS database=${verified.join(',')} offline=R10–R36`;
+  }catch(error){result.textContent=`FAIL ${error.message}`;}
+});
+</script>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>管道扩容演示</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2f6;color:#182e40;font:14px/1.6 "Microsoft YaHei",sans-serif}main{max-width:1300px;margin:auto;padding:20px}h1{font-size:22px;margin:0 0 12px}.panel{background:white;border:1px solid #d5e1e8;border-radius:12px;padding:16px}.toolbar,#timeline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}button{font:inherit;border:1px solid #b8ccd6;border-radius:6px;padding:5px 10px;background:white;color:#182e40;cursor:pointer}button.active{background:#006d77;color:white}.muted{font-size:12px;color:#637889}#scene{width:100%;height:calc(100vh - 260px);min-height:340px;display:block;background:#f7fafc;border-radius:8px;cursor:grab}.footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px}
+</style></head><body><main>
+<h1>管道扩容演示</h1>
+<section class="panel">
+<div class="toolbar"><button id="playDemo">▶ 播放</button><button id="restartDemo">重置</button><span id="playStatus" class="muted" aria-live="polite"></span></div>
+<div id="timeline"></div>
+<div class="toolbar"><button id="view">俯视 / 三维</button><button id="panMode" aria-pressed="false">平移</button><button id="resetView">恢复视角</button><button id="zoomOut" aria-label="缩小">−</button><span id="zoomValue" class="muted">100%</span><button id="zoomIn" aria-label="放大">＋</button></div>
+<canvas id="scene" aria-label="R1-1区域0度层的管道插入过程"></canvas>
+<div class="footer muted"><span>R1-1 · 0°层　<span style="color:#167ba6">━ 初始</span>　<span style="color:#119861">━ 新增</span></span><span>拖动旋转 · 右键拖动平移 · 滚轮缩放</span></div>
+</section>
+</main><script>
+const D=__NETWORK_DATA__;
+const $=id=>document.getElementById(id), colors=['#167ba6','#17a89b','#7882b8','#ac6db1','#bb843b','#5e9165'];
+// 完整展示初始状态和七次插入。
+let frame=0, topView=true, selectedRegion=D.segments[D.focus].region, zoom=1, panX=0, panY=0, panMode=false;
+// 四元数轨迹球：旋转整个三维坐标，不固定高度投影或锁定俯仰角。
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function normalizeQ(q){const n=Math.hypot(...q);return q.map(v=>v/n)}
+function multiplyQ(a,b){return [a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]]}
+const defaultOrientation=multiplyQ([Math.cos(-.55),Math.sin(-.55),0,0],[Math.cos(-.25),0,0,Math.sin(-.25)]);
+let orientation=[1,0,0,0];
+function rotate3(v){const u=orientation.slice(1),t=cross(u,v).map(x=>2*x),c=cross(u,t);return v.map((x,i)=>x+orientation[0]*t[i]+c[i])}
+function trackballPoint(e){const r=$('scene').getBoundingClientRect(),radius=Math.min(r.width,r.height)*.45,x=(e.clientX-r.left-r.width/2)/radius,y=-(e.clientY-r.top-r.height/2)/radius,n=Math.hypot(x,y);return n<=1?[x,y,Math.sqrt(Math.max(0,1-n*n))]:[x/n,y/n,0]}
+function rotationBetween(a,b){const dot=Math.max(-1,Math.min(1,a.reduce((s,x,i)=>s+x*b[i],0)));if(dot<-.999999){const axis=cross(a,Math.abs(a[0])<.9?[1,0,0]:[0,1,0]);return normalizeQ([0,...axis])}return normalizeQ([1+dot,...cross(a,b)])}
+const F=()=>D.frames[frame];
+let opened=new Set(F().open_pipes);
+const initialOpened=new Set(D.frames[0].open_pipes);
+let playing=false,playTimer=null,animationId=null,animationProgress=1,addedPipes=new Set(),removedPipes=new Set();
+function stopPlayback(){playing=false;clearTimeout(playTimer);playTimer=null;$('playDemo').textContent='▶ 播放'}
+function schedulePlayback(){playTimer=setTimeout(()=>{if(!playing)return;if(frame===D.frames.length-1){stopPlayback();render();return}showFrame(frame+1);schedulePlayback()},1900)}
+function showFrame(index){
+ const previous=opened;frame=index;opened=new Set(F().open_pipes);
+ addedPipes=new Set([...opened].filter(p=>!previous.has(p)));removedPipes=new Set([...previous].filter(p=>!opened.has(p)));
+ cancelAnimationFrame(animationId);animationProgress=(addedPipes.size||removedPipes.size)?0:1;render();
+ if(animationProgress<1){const start=performance.now();let last=0;const tick=now=>{if(now-last>30){animationProgress=Math.min(1,(now-start)/1200);render();last=now}if(animationProgress<1)animationId=requestAnimationFrame(tick)};animationId=requestAnimationFrame(tick)}
+}
+$('playDemo').onclick=()=>{if(playing){stopPlayback();render();return}if(frame===D.frames.length-1)showFrame(0);playing=true;$('playDemo').textContent='⏸ 暂停';render();schedulePlayback()};
+$('restartDemo').onclick=()=>{stopPlayback();showFrame(0)};
+
+$('timeline').innerHTML=D.frames.map((f,i)=>`<button data-frame="${i}">${i===0?'初始':`+${i}对`}</button>`).join('');
+$('timeline').onclick=e=>{if(e.target.dataset.frame!==undefined){stopPlayback();showFrame(+e.target.dataset.frame)}};
+function visible(s){return s.region===selectedRegion&&D.pipes[s.pipe].layer===0&&opened.has(s.pipe)}
+$('view').onclick=()=>{topView=!topView;orientation=topView?[1,0,0,0]:defaultOrientation.slice();render()};
+$('resetView').onclick=()=>{topView=true;orientation=[1,0,0,0];zoom=1;panX=panY=0;render()};
+function setZoom(value){zoom=Math.max(.25,Math.min(8,value));render()}
+$('zoomIn').onclick=()=>setZoom(zoom*1.25);$('zoomOut').onclick=()=>setZoom(zoom/1.25);
+$('scene').addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?400:1);setZoom(zoom*Math.exp(-Math.max(-300,Math.min(300,delta))*.002))},{passive:false});
+function surface(id){const c=$(id),r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=r.height*dpr;const ctx=c.getContext('2d');ctx.scale(dpr,dpr);return [ctx,r.width,r.height]}
+function render(){
+ $('playStatus').textContent=`新增 ${frame}/7 对 · 共 ${2+frame} 对`;
+ const [ctx,w,h]=surface('scene'), rid=selectedRegion, cell=D.config.boundary_m/D.config.grid_n, half=D.config.boundary_m/2;
+ let cx=0,cy=0,span=D.config.boundary_m;
+ if(rid!=='all'){const [row,col]=rid.slice(1).split('-').map(Number);cx=-half+(col-.5)*cell;cy=-half+(row-.5)*cell;span=cell}
+ const heightScale=2,centerZ=(D.layers[0].height_m+D.layers[D.layers.length-1].height_m)/2;
+ const scale=zoom*.88*Math.min(w,h)/(topView?span:Math.hypot(Math.SQRT2*span,2*centerZ*heightScale));
+ function project(p){const v=rotate3([p[0]-cx,p[1]-cy,(p[2]-centerZ)*heightScale]);return [w/2+panX+v[0]*scale,h/2+panY-v[1]*scale]}
+ function line(a,b,color,width=1,dash=[]){a=project(a);b=project(b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+ ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();
+ for(let k=0;k<=D.config.grid_n;k++){const v=-half+k*cell;line([v,-half,0],[v,half,0],'#c8d6df');line([-half,v,0],[half,v,0],'#c8d6df')}
+ const visibleEntries=Object.entries(D.segments).filter(([id,s])=>visible(s));
+ for(const [id,s] of visibleEntries){const p=D.pipes[s.pipe];const extra=opened.has(s.pipe)&&!initialOpened.has(s.pipe);ctx.globalAlpha=addedPipes.has(s.pipe)?.2+.8*animationProgress:1;line(s.a,s.b,extra?'#119861':opened.has(s.pipe)?colors[p.layer]:'#dce4e9',extra?2.8:opened.has(s.pipe)?1.05:.5);ctx.globalAlpha=1}
+ if(animationProgress<1){ctx.globalAlpha=1-animationProgress;for(const s of Object.values(D.segments)){if(removedPipes.has(s.pipe)&&(rid==='all'||s.region===rid)&&D.pipes[s.pipe].layer===0)line(s.a,s.b,'#df5260',3,[6,4])}ctx.globalAlpha=1}
+ // 箭头表示正反向。
+ for(const [id,s] of visibleEntries){if(!opened.has(s.pipe))continue;const a=project(s.a),b=project(s.b),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,ang=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=initialOpened.has(s.pipe)?colors[0]:'#119861';ctx.beginPath();ctx.moveTo(mx+4*Math.cos(ang),my+4*Math.sin(ang));ctx.lineTo(mx+3*Math.cos(ang+2.5),my+3*Math.sin(ang+2.5));ctx.lineTo(mx+3*Math.cos(ang-2.5),my+3*Math.sin(ang-2.5));ctx.fill()}
+ ctx.restore();
+ document.querySelectorAll('[data-frame]').forEach(b=>b.classList.toggle('active',+b.dataset.frame===frame));
+ $('zoomValue').textContent=`${Math.round(zoom*100)}%`;
+}
+$('panMode').onclick=()=>{panMode=!panMode;$('panMode').classList.toggle('active',panMode);$('panMode').setAttribute('aria-pressed',String(panMode));$('scene').style.cursor=panMode?'move':'grab'};
+let drag=null;
+$('scene').style.touchAction='none';
+$('scene').oncontextmenu=e=>e.preventDefault();
+$('scene').onpointerdown=e=>{
+ if(!e.isPrimary||![0,2].includes(e.button))return;
+ drag={id:e.pointerId,button:e.button,moved:false,startX:e.clientX,startY:e.clientY,pan:panMode||e.button===2||e.shiftKey,x:e.clientX,y:e.clientY,point:trackballPoint(e)};
+ $('scene').setPointerCapture(e.pointerId);$('scene').style.cursor=drag.pan?'move':'grabbing';e.preventDefault();
+};
+$('scene').onpointermove=e=>{
+ if(!drag||drag.id!==e.pointerId)return;
+ if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<=4)return;
+ drag.moved=true;
+ if(drag.pan){panX+=e.clientX-drag.x;panY+=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY}
+ else{const next=trackballPoint(e);orientation=normalizeQ(multiplyQ(rotationBetween(drag.point,next),orientation));drag.point=next;topView=false}
+ render();
+};
+function endDrag(e){
+ if(!drag||drag.id!==e.pointerId)return;
+ drag=null;$('scene').style.cursor=panMode?'move':'grab';
+ if($('scene').hasPointerCapture(e.pointerId))$('scene').releasePointerCapture(e.pointerId);
+}
+$('scene').onpointerup=endDrag;$('scene').onpointercancel=endDrag;$('scene').onlostpointercapture=endDrag;
+window.addEventListener('resize',render);window.addEventListener('pagehide',()=>{stopPlayback();cancelAnimationFrame(animationId)});render();
+</script></body></html>

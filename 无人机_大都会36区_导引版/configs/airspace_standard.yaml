@@ -1,0 +1,5 @@
+mode: standard
+side_length: 5000.0
+default_num_uavs: 1000
+default_max_turns: 3500
+

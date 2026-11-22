@@ -1,0 +1,104 @@
+{
+    "observation_time":  "2026-10-26T12:15:15.650657+00:00",
+    "nodes":  {
+                  "4":  {
+                            "region_id":  1,
+                            "version_id":  1,
+                            "node_id":  4,
+                            "position":  [
+                                             4440,
+                                             250,
+                                             135
+                                         ],
+                            "region_ids":  [
+                                               1
+                                           ],
+                            "layer_id":  1,
+                            "node_type":  0,
+                            "boundary_type":  0
+                        },
+                  "5":  {
+                            "region_id":  1,
+                            "version_id":  1,
+                            "node_id":  5,
+                            "position":  [
+                                             5000,
+                                             250,
+                                             135
+                                         ],
+                            "region_ids":  [
+                                               1,
+                                               2
+                                           ],
+                            "layer_id":  1,
+                            "node_type":  0,
+                            "boundary_type":  2
+                        },
+                  "444":  {
+                              "region_id":  2,
+                              "version_id":  1,
+                              "node_id":  444,
+                              "position":  [
+                                               6428.6,
+                                               250,
+                                               135
+                                           ],
+                              "region_ids":  [
+                                                 2
+                                             ],
+                              "layer_id":  1,
+                              "node_type":  0,
+                              "boundary_type":  0
+                          }
+              },
+    "graph":  {
+                  "4":  [
+                            {
+                                "region_id":  1,
+                                "version_id":  1,
+                                "pipe_id":  4,
+                                "main_pipe_id":  1,
+                                "main_pipe_pair_id":  1,
+                                "layer_id":  1,
+                                "type":  0,
+                                "angle":  0,
+                                "length":  560,
+                                "lane_number":  5,
+                                "pipe_width":  30,
+                                "lane_width":  6,
+                                "start_node_id":  4,
+                                "end_node_id":  5,
+                                "kind":  0,
+                                "edge_id":  4,
+                                "is_open":  true,
+                                "d_safe":  80,
+                                "speed_limit":  50,
+                                "max_capacity":  50
+                            }
+                        ],
+                  "5":  [
+                            {
+                                "region_id":  2,
+                                "version_id":  1,
+                                "pipe_id":  1,
+                                "main_pipe_id":  1,
+                                "main_pipe_pair_id":  1,
+                                "layer_id":  1,
+                                "type":  0,
+                                "angle":  0,
+                                "length":  1428.6000000000004,
+                                "lane_number":  5,
+                                "pipe_width":  30,
+                                "lane_width":  6,
+                                "start_node_id":  5,
+                                "end_node_id":  444,
+                                "kind":  0,
+                                "edge_id":  1,
+                                "is_open":  true,
+                                "d_safe":  80,
+                                "speed_limit":  50,
+                                "max_capacity":  50
+                            }
+                        ]
+              }
+}
