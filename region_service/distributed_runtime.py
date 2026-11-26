@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from threading import RLock
 
+from integration_ports import evaluate_statistics
 from repository import REGION_ID
 from simulation_engine import LocalSimulationSession
 
 
 _sessions = {}
+_congestion = {}
 _lock = RLock()
 
 
@@ -40,6 +42,7 @@ def initialize_session(config):
             return existing.summary(), False
         session = LocalSimulationSession(config)
         _sessions[key] = session
+        _congestion[key] = (config.get("congestion_policy", {}), {})
         return session.summary(), True
 
 
@@ -156,7 +159,17 @@ def finish_frame(run_id, attempt_id, frame_index, frame_time):
         session = _sessions.get(_key(run_id, attempt_id))
         if session is None:
             raise KeyError("regional attempt is not initialized")
-        return session.finish_frame(frame_index, frame_time)
+        frame = session.finish_frame(frame_index, frame_time)
+        if frame["statistics_emitted"]:
+            policy, consecutive = _congestion[_key(run_id, attempt_id)]
+            evaluation = evaluate_statistics(
+                {"statistics": (session.statistics_history[-1],)},
+                {"congestion_policy": policy},
+                consecutive=consecutive,
+            )
+            if evaluation["decision"] == "adjustment_required":
+                frame["congestion"] = evaluation
+        return frame
 
 
 def get_summary(run_id, attempt_id):
@@ -198,6 +211,7 @@ def finalize(run_id, attempt_id):
     """
     with _lock:
         session = _sessions.pop(_key(run_id, attempt_id), None)
+        _congestion.pop(_key(run_id, attempt_id), None)
         if session is None:
             raise KeyError("regional attempt is not initialized")
         result = session.result()

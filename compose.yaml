@@ -691,6 +691,8 @@ services:
     hostname: simulation-coordinator
     restart: unless-stopped
     ports: ["18080:8080"]
+    environment:
+      SIM_FRAME_BATCH: "${SIM_FRAME_BATCH:-1}"
     depends_on:
       region-dt-01: {condition: service_healthy}
       region-dt-02: {condition: service_healthy}

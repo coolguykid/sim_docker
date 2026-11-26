@@ -35,5 +35,16 @@ window.RegionSimulationResults = (() => {
     source.onerror=event=>onError?.(event);
     return source;
   }
-  return {latest, snapshot, stream, adaptSnapshot};
+  async function replays(regionId) {
+    const base = endpoint(regionId);
+    return base ? json(base + '/api/v1/simulation-results/replays') : [];
+  }
+
+  async function topology(regionId, {runId, attemptId}) {
+    const data = await json(endpoint(regionId) + '/api/v1/simulation-results/' +
+      encodeURIComponent(runId) + '/attempts/' + attemptId + '/topology');
+    return RegionDbTopology.adapt(RegionDbTopology.validate(data, regionId));
+  }
+
+  return {latest, snapshot, stream, adaptSnapshot, replays, topology};
 })();

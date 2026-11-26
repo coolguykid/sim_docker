@@ -1,6 +1,7 @@
 """Regional-DT business workflow; the coordinator is only a simulation tool."""
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from integration_ports import (
 from repository import (
     REGION_ID, append_workflow_event, commit_to_database, load_snapshot, mark_status)
 from snapshot_loader import snapshot_summary
+from topology_reader import attempt_topology
 from topology_adjustments import apply_to_snapshot, merge_adjustments
 
 
@@ -92,6 +94,19 @@ def run_workflow(request: dict) -> None:
     cumulative_adjustments = dict(request.get("topology_adjustments") or {})
 
     try:
+        global_transfers = request.get("global_guidance_transfers") or []
+        local_transfers = request.get("transfers", [])
+        if global_transfers:
+            local_transfers = [
+                {
+                    "source_layer": row["source_layer"],
+                    "target_region_id": row["target_region_id"],
+                    "target_layer": row["target_layer"],
+                    "proportion": row["proportion"],
+                }
+                for row in global_transfers if row["source_region_id"] == REGION_ID
+            ]
+
         mark_status(run_id, base_attempt_id, "snapshotting")
         append_workflow_event(run_id, base_attempt_id, "snapshotting", {})
         original_snapshot = load_snapshot(request)
@@ -116,15 +131,22 @@ def run_workflow(request: dict) -> None:
                 "random_seed": request.get("random_seed", 42),
                 "network": effective_snapshot["network"],
                 "uavs": missions,
-                "guidance": {"transfers": request.get("transfers", [])},
+                "guidance": {"transfers": local_transfers},
                 "global_routing_graph": request.get("global_routing_graph"),
-                "global_guidance_transfers": request.get("global_guidance_transfers", []),
+                "global_guidance_transfers": global_transfers,
                 "guidance_revision": request.get("guidance_revision", 1),
                 "statistics_window_seconds": 60.0,
                 "statistics_interval_seconds": 5.0,
+                "congestion_policy": request.get("congestion_policy", {}),
                 "fixed_statistics_interval_seconds": 60.0,
                 "output_dir": str(output_dir),
             }
+            output_dir.mkdir(parents=True, exist_ok=True)
+            topology_path = output_dir / "topology.json"
+            temporary_path = topology_path.with_suffix(".tmp")
+            temporary_path.write_text(
+                json.dumps(attempt_topology(effective_snapshot), default=str), encoding="utf-8")
+            temporary_path.replace(topology_path)
             initialize_session(session_config)
             mark_status(run_id, base_attempt_id, "simulating")
             append_workflow_event(run_id, base_attempt_id, "regional_session_ready", {
@@ -152,10 +174,10 @@ def run_workflow(request: dict) -> None:
             local_result = get_result(run_id, distributed_attempt_id)
             mark_status(run_id, base_attempt_id, "evaluating")
             statistics_csv = local_result["statistics_csv"]
-            evaluation = evaluate_statistics(
-                {**local_result, "statistics": iter_rolling_statistics(statistics_csv)},
-                request,
-            )
+            congestion = coordinated.get("congestion")
+            evaluation = (congestion or {}).get("regions", {}).get(str(REGION_ID))
+            if evaluation is None:
+                evaluation = evaluate_statistics({}, request)
             report_decision(coordinator_url, {
                 "run_id": run_id, "attempt_id": distributed_attempt_id,
                 "region_id": REGION_ID, "decision": evaluation["decision"],
@@ -168,6 +190,8 @@ def run_workflow(request: dict) -> None:
                 "distributed_attempt_id": distributed_attempt_id,
                 "evaluation": evaluation,
                 "collective_decision": collective.get("collective_decision"),
+                "end_time_s": coordinated["sim_time"],
+                "congestion": congestion,
                 "frame_csv": local_result["frame_csv"],
                 "statistics_csv": local_result["statistics_csv"],
                 "fixed_statistics_csv": local_result["fixed_statistics_csv"],
@@ -188,7 +212,7 @@ def run_workflow(request: dict) -> None:
                     "run_id": run_id,
                     "attempt_id": base_attempt_id,
                     "region_id": REGION_ID,
-                    "guidance": {"transfers": request.get("transfers", [])},
+                    "guidance": {"transfers": local_transfers},
                     "evaluation": evaluation,
                     "topology_changed": commit_receipt["topology_changed"],
                     "topology_change": commit_receipt,

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>区域 DT 航路调整前后对比</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#f4f6f4;color:#17352e;font:16px system-ui,sans-serif}
+  main{max-width:1500px;margin:auto;padding:clamp(20px,4vw,66px)}
+  h1{font-size:clamp(26px,4vw,46px);margin:0 0 24px}h2{font-size:20px;margin:0 0 12px}
+  .controls,.legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  label{display:flex;align-items:center;gap:8px}button,select{font:inherit;padding:8px;border:1px solid #aebcb5;border-radius:6px;background:white;color:inherit}
+  button{cursor:pointer}a{color:#246453}.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  section{background:#fff;border:1px solid #d5dfd9;border-radius:12px;padding:18px}
+  canvas{width:100%;height:clamp(230px,34vh,410px);display:block}
+  .legend{margin:14px 0}.legend span::before{content:"";display:inline-block;width:18px;height:3px;vertical-align:middle;background:var(--color);margin-right:8px}
+  .time{margin-top:18px;display:grid;gap:12px}.time input{flex:1;min-width:100px}
+  table{border-collapse:collapse;width:100%;text-align:right}th,td{padding:8px;border-bottom:1px solid #e0e8e3}th:first-child{text-align:left}
+  .note,#status{color:#45655b;font-size:14px} @media(max-width:820px){.charts{grid-template-columns:1fr}}
+</style>
+<main>
+  <h1>区域 DT 航路调整前后对比</h1>
+  <div class="controls">
+    <label>运行 <select id="run"></select></label>
+    <label>范围 <select id="region"><option value="all">全网 · 35 区域</option></select></label>
+    <button id="refresh">刷新数据</button>
+    <a href="http://127.0.0.1:8767/">打开路网回放</a>
+  </div>
+  <p id="status" role="status"></p>
+  <div class="legend"><span style="--color:#18735c">调整前</span><span style="--color:#8b55ad">调整后</span></div>
+  <div class="charts">
+    <section><h2>飞行器数量 <small>架</small></h2><canvas id="count" aria-label="调整前后飞行器数量曲线"></canvas></section>
+    <section><h2>平均速度 <small>m/s</small></h2><canvas id="speed" aria-label="调整前后平均速度曲线"></canvas></section>
+  </div>
+  <section class="time">
+    <div class="controls">
+      <button id="play">播放</button>
+      <label style="flex:1">仿真时刻 <input id="seek" type="range" min="0" max="0" value="0" step="1"><output id="seconds">0 s</output></label>
+    </div>
+    <table><thead><tr><th>轮次</th><th>数量（架）</th><th>平均速度（m/s）</th></tr></thead>
+      <tbody><tr><th>调整前</th><td id="count0"></td><td id="speed0"></td></tr>
+      <tr><th>调整后</th><td id="count1"></td><td id="speed1"></td></tr></tbody></table>
+    <div class="note">数量统计 CSV 中 active=1 的记录，包含仍在等待的飞机。均速对这些记录的有效速度直接求平均，含零速。两轮均从各自的第 0 秒起算。</div>
+  </section>
+</main>
+<script src="comparison.js"></script>
+</html>

@@ -27,7 +27,7 @@ window.RegionDemo = (() => {
     dbTopology:null,dbTopologyRegion:null,dbTopologyLoading:new Set(),dbTopologyError:'',dbSelected:null,
     // REGION_DT_SIMULATION_RESULT: newest CSV attempt and one frame-sized
     // snapshot for the selected Docker region.
-    dbSimulation:null,dbSimulationRegion:null,dbSimulationSnapshot:null,
+    replay:null,dbSimulation:null,dbSimulationRegion:null,dbSimulationSnapshot:null,
     dbSimulationLoading:false,dbSimulationSnapshotKey:'',dbSimulationError:'',
     dbSimulationSnapshotLoading:false,dbSimulationSnapshotPending:false,
     dbSimulationStream:null,dbSimulationFollow:true,dbSimulationStatsHistory:new Map()};
@@ -164,7 +164,7 @@ window.RegionDemo = (() => {
       <div class="rd-lower"><div><section class="panel"><div class="rd-head"><div><h3 id="rdChartTitle"></h3><span class="rd-note">实线模拟历史 / 虚线模拟预测 / 缺失留断点</span></div><div class="rd-chart-tabs" id="rdChartTabs">${[['count','数量'],['speed','均速'],['flow','流量'],['density','密度']].map(([k,v])=>`<button data-chart="${k}">${v}</button>`).join('')}<label class="rd-note"><input id="rdPrediction" type="checkbox" checked>预测</label></div></div><div class="rd-history"><canvas id="rdHistory" aria-label="所选对象历史与预测曲线"></canvas></div><div id="rdForecastNote" class="rd-chart-caption rd-small"></div></section>
       <div class="rd-mini-grid"><section class="panel"><div class="rd-head"><h3>通行约束 · 上限与运行对比</h3><span class="rd-note">约束虚线 / 运行实线</span></div><div class="rd-mini-chart"><canvas id="rdLimits" aria-label="安全距离与最小纵向间距、速度上限与运行最高速度对比"></canvas></div><div class="rd-chart-caption rd-small"><div class="rd-limits-legend" aria-label="通行约束线条图例"><span><i class="rd-limit-distance rd-limit-bound"></i>安全距离下限 · m</span><span><i class="rd-limit-distance"></i>运行最小纵向间距 · m</span><span><i class="rd-limit-speed rd-limit-bound"></i>速度上限 · m/s</span><span><i class="rd-limit-speed"></i>运行最高速度 · m/s</span></div><span id="rdLimitsNote"></span></div></section></div></div>
 </div>
-      <section class="panel rd-time"><button id="rdPlay">暂停</button><button id="rdReplay">重新播放</button><strong id="rdTime"></strong><input id="rdTimeSlider" type="range" min="0" max="3600" step="1" value="1800" aria-label="区域仿真时间秒"><select id="rdRate" aria-label="动画播放倍率"><option>1</option><option selected>15</option><option>30</option><option>60</option></select><span class="rd-note">×</span><button id="rdLatest">返回末帧</button></section><div class="rd-metadata" id="rdTimeMeta"></div>
+      <section class="panel rd-time"><button id="rdPlay">暂停</button><button id="rdReplay">重新播放</button><strong id="rdTime"></strong><input id="rdTimeSlider" type="range" min="0" max="3600" step="1" value="1800" aria-label="区域仿真时间秒"><select id="rdRate" aria-label="动画播放倍率"><option>1</option><option selected>15</option><option>30</option><option>60</option></select><span class="rd-note">×</span><button id="rdLatest">返回末帧</button></section><div class="rd-metadata" id="rdTimeMeta"></div><label>回放轮次 <select id="rdAttempts"></select></label> <button id="rdLoadReplay">加载回放</button>
 `;
     bind();RegionEvaluation.mount();RegionProjection.mount();
     $('rdTime').parentElement.append($('rdProjectionPlayback'));
@@ -244,7 +244,18 @@ window.RegionDemo = (() => {
     document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view==='region');b.setAttribute('aria-pressed',String(b.dataset.view==='region'));});
     // Clear/schedule the selected region's external topology before painting,
     // so switching from R01–R35 to offline R36 cannot leave a stale map.
-    Q.last=performance.now();loadDatabaseTopologyForRegion();loadDatabaseSimulationForRegion();refresh(true);
+    Q.last=performance.now();
+    if(Q.replay?.region!==state.region+1){
+      Q.replay=null;
+      loadDatabaseTopologyForRegion();loadDatabaseSimulationForRegion();
+    }
+    refresh(true);
+    if($('rdAttempts').dataset.region!==String(state.region+1)){
+      $('rdAttempts').dataset.region=String(state.region+1);
+      $('rdAttempts').replaceChildren();
+      listReplayAttempts();
+    }
+    $('rdLoadReplay').onclick=loadReplay;
   }
 
   // REGION_DB_TOPOLOGY: regions 1–9 load their own Docker database. Regions
@@ -257,48 +268,86 @@ window.RegionDemo = (() => {
     if(Q.dbTopologyLoading.has(regionId))return;
     Q.dbTopologyLoading.add(regionId);Q.dbTopologyError='';Q.message=`正在读取区域${regionId} Docker数据库路网…`;
     RegionDbTopology.load(regionId).then(topology=>{
-      if(Q.state.region+1!==regionId)return;
+      if(Q.state.region+1!==regionId||Q.replay)return;
       Q.dbTopology=topology;Q.dbTopologyRegion=regionId;
       Q.message=`已加载区域${regionId}数据库路网 · 拓扑版本 ${topology.topologyVersion}`;
       refresh(true);
     }).catch(error=>{
-      if(Q.state.region+1!==regionId)return;
+      if(Q.state.region+1!==regionId||Q.replay)return;
       Q.dbTopologyError=error.message;Q.message=`区域${regionId}数据库路网加载失败，暂时显示原离线演示：${error.message}`;
       refresh(true);
     }).finally(()=>{Q.dbTopologyLoading.delete(regionId);});
   }
 
+  async function listReplayAttempts(){
+    const region=Q.state.region+1;
+    const select=$('rdAttempts');
+    try{
+      const attempts=await RegionSimulationResults.replays(region);
+      if(Q.state.region+1!==region)return;
+      const previous=select.value;
+      select.replaceChildren(new Option('选择轮次',''));
+      for(const attempt of attempts){
+        select.add(new Option(attempt.runId+' / '+attempt.attemptId,JSON.stringify(attempt)));
+      }
+      if(Array.from(select.options).some(option=>option.value===previous))select.value=previous;
+    }catch(error){Q.message=error.message;refresh(true);}
+  }
+
+  async function loadReplay(){
+    const value=$('rdAttempts').value;
+    if(!value)return;
+    const region=Q.state.region+1, attempt=JSON.parse(value);
+    const replay={region,attempt};
+    Q.replay=replay;Q.state.playing=false;
+    Q.dbSimulationStream?.close();Q.dbSimulationStream=null;
+    try{
+      const topology=await RegionSimulationResults.topology(region,attempt);
+      if(Q.replay!==replay||Q.state.region+1!==region)return;
+      Q.dbTopology=topology;Q.dbTopologyRegion=region;Q.dbSelected=null;
+      Q.dbSimulation=attempt;Q.dbSimulationRegion=region;Q.state.t=attempt.minTime/60;
+      Q.dbSimulationSnapshot=null;Q.dbSimulationSnapshotKey='';
+      Q.dbSimulationStatsHistory.clear();Q.dbSimulationFollow=false;Q.message='';
+      refresh(true);
+    }catch(error){
+      if(Q.replay!==replay)return;
+      Q.replay=null;Q.message=error.message;
+      startDatabaseSimulationStream(region);refresh(true);
+    }
+  }
+
   function playbackEndSeconds(){return Q.dbSimulation?.maxTime??C.duration;}
   function loadDatabaseSimulationForRegion(){
+    if(Q.replay)return;
     const region=Q.state.region+1;
     if(!RegionDbTopology.endpoints[region]){Q.dbSimulationStream?.close();Q.dbSimulationStream=null;Q.dbSimulation=null;Q.dbSimulationSnapshot=null;Q.dbSimulationRegion=null;return;}
     if(Q.dbSimulationRegion!==region){Q.dbSimulationStream?.close();Q.dbSimulationStream=null;Q.dbSimulation=null;Q.dbSimulationSnapshot=null;Q.dbSimulationSnapshotKey='';Q.dbSimulationFollow=true;Q.dbSimulationSnapshotLoading=false;Q.dbSimulationSnapshotPending=false;Q.dbSimulationStatsHistory.clear();}
     if(Q.dbSimulationLoading)return;
     Q.dbSimulationLoading=true;Q.dbSimulationError='';
     RegionSimulationResults.latest(region).then(result=>{
-      if(Q.state.region+1!==region)return;
+      if(Q.state.region+1!==region||Q.replay)return;
       Q.dbSimulation=result;Q.dbSimulationRegion=region;
       if(Q.state.t*60>result.maxTime)Q.state.t=result.maxTime/60;
       $('rdTimeSlider').max=result.maxTime;
       loadDatabaseSimulationSnapshot(true);
     }).catch(error=>{
-      if(Q.state.region+1!==region)return;
+      if(Q.state.region+1!==region||Q.replay)return;
       Q.dbSimulation=null;Q.dbSimulationSnapshot=null;
       if(!String(error.message).includes('HTTP 404'))Q.dbSimulationError=error.message;
-    }).finally(()=>{Q.dbSimulationLoading=false;if(Q.state.region+1!==region)loadDatabaseSimulationForRegion();else startDatabaseSimulationStream(region);});
+    }).finally(()=>{Q.dbSimulationLoading=false;if(Q.state.region+1!==region)loadDatabaseSimulationForRegion();else if(!Q.replay)startDatabaseSimulationStream(region);});
   }
   function startDatabaseSimulationStream(region){
     Q.dbSimulationStream?.close();
     Q.dbSimulationStream=RegionSimulationResults.stream(region,{
       runId:Q.dbSimulation?.runId,attemptId:Q.dbSimulation?.attemptId,after:Q.dbSimulation?.maxTime,
       onRun:metadata=>{
-        if(Q.state.region+1!==region)return;
+        if(Q.state.region+1!==region||Q.replay)return;
         const changed=!Q.dbSimulation||Q.dbSimulation.runId!==metadata.runId||Q.dbSimulation.attemptId!==metadata.attemptId;
         Q.dbSimulation={...metadata};Q.dbSimulationRegion=region;
         if(changed){Q.dbSimulationFollow=true;Q.dbSimulationSnapshot=null;Q.dbSimulationSnapshotKey='';Q.dbSimulationStatsHistory.clear();}
       },
       onSnapshot:snapshot=>{
-        if(Q.state.region+1!==region)return;
+        if(Q.state.region+1!==region||Q.replay)return;
         Q.dbSimulation={...(Q.dbSimulation||{}),runId:snapshot.runId,attemptId:snapshot.attemptId,regionId:snapshot.regionId,minTime:Q.dbSimulation?.minTime??0,maxTime:Math.max(Q.dbSimulation?.maxTime??0,snapshot.frameTime)};
         Q.dbSimulationSnapshot=snapshot;Q.dbSimulationSnapshotKey=`${snapshot.runId}:${snapshot.attemptId}:${snapshot.frameTime}`;rememberDatabaseStatistics(snapshot);
         if(Q.dbSimulationFollow){Q.state.t=snapshot.frameTime/60;Q.state.playing=false;}
@@ -315,9 +364,10 @@ window.RegionDemo = (() => {
     // newest requested time. The former fire-and-discard approach could keep
     // discarding every response at 15x/30x/60x, so only 1x appeared to update.
     if(Q.dbSimulationSnapshotLoading){Q.dbSimulationSnapshotPending=true;return;}
+    const replay=Q.replay;
     Q.dbSimulationSnapshotLoading=true;const region=Q.state.region+1,runId=Q.dbSimulation.runId,attemptId=Q.dbSimulation.attemptId;
     RegionSimulationResults.snapshot(region,runId,attemptId,time).then(snapshot=>{
-      if(Q.state.region+1!==region||Q.dbSimulation?.runId!==runId||Q.dbSimulation?.attemptId!==attemptId)return;
+      if(Q.replay!==replay||Q.state.region+1!==region||Q.dbSimulation?.runId!==runId||Q.dbSimulation?.attemptId!==attemptId)return;
       if(Q.dbSimulationFollow&&Q.dbSimulationSnapshot?.frameTime>snapshot.frameTime)return;
       Q.dbSimulationSnapshot=snapshot;Q.dbSimulationSnapshotKey=key;rememberDatabaseStatistics(snapshot);refresh(true);
     }).catch(error=>{if(Q.state.region+1===region)Q.dbSimulationError=error.message;}).finally(()=>{

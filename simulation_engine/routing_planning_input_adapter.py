@@ -119,52 +119,43 @@ def _lane_offsets(lanes, start, end, lane_count):
     return tuple(starts[:lane_count]), tuple(ends[:lane_count])
 
 
-class DeliveredTopology:
-    def __init__(self, region_id, version, graph, edge_refs, statistics_env,
-                 node_external_ids, layer_by_edge):
-        """保存区域图、数据库边引用、统计环境和层号映射，并构建查询索引。
-
-        输入
-            region_id：区域编号。
-            version：路网拓扑版本号。
-            graph：内部路网对象。
-            edge_refs：图边 ID 到数据库边引用的映射。
-            statistics_env：统计器使用的道路边查询环境。
-            node_external_ids：内部节点 ID 到数据库节点 ID 的映射。
-            layer_by_edge：内部边 ID 到层号的映射。
-        输出
-            None。
-        """
-        self.region_id, self.version = int(region_id), int(version)
-        self.graph, self.edge_refs = graph, edge_refs
-        self.statistics_env = statistics_env
-        self.node_external_ids, self.layer_by_edge = node_external_ids, layer_by_edge
-        self.rebuild_indexes()
-
-    def rebuild_indexes(self):
-        """依据当前图边刷新节点的出边索引。
-
-        输入
-            无显式参数。
-        输出
-            None。
-        """
-        self.outgoing = {}
-        for edge in self.graph.edges.values():
-            self.outgoing.setdefault(edge.source, []).append(edge.edge_id)
-
-    def edge_ref(self, edge_id):
-        """将内部边 ID 转换成数据库边引用。
-
-        输入
-            edge_id：内部图边编号。
-        输出
-            数据库边引用。
-        """
-        return self.edge_refs[str(edge_id)]
+def edge_ref(edge):
+    """Return the database facility associated with a movement edge."""
+    if edge.kind == "FLY" and edge.pipe_id is not None:
+        return EdgeRef("pipe", edge.pipe_id)
+    if edge.kind == "RAMP" and edge.ramp_id is not None:
+        return EdgeRef("ramp", edge.ramp_id)
+    raise KeyError(edge.edge_id)
 
 
-def build_delivered_topology(region_id, version, network, include_lanes=True):
+def _add_outbound_boundaries(region_id, raw_nodes, nodes, edges):
+    """Build directed exits from the region's own database node rows."""
+    transitions = {}
+    for external_id, row in raw_nodes.items():
+        if int(row.get("boundary_type", row.get("boundary_role", 0))) != 2:
+            continue
+        memberships = {int(value) for value in row["region_ids"]}
+        if region_id not in memberships or len(memberships) != 2:
+            continue
+        target_region, = memberships - {region_id}
+        layer = int(row["layer_id"])
+        source = regional_node_id(external_id, region_id)
+        target = regional_node_id(external_id, target_region)
+        point = nodes[source].position
+        nodes[target] = RoadNode(target, target_region, point)
+        name = "B:N{}:R{}L{}:R{}L{}".format(
+            external_id, region_id, layer, target_region, layer)
+        edges[name] = RoadEdge(name, source, target, region_id, "BOUNDARY",
+                               0.0, 15.0, (point, point), lane_count=1)
+        transitions[name] = {
+            "shared_node_id": external_id,
+            "source_region": region_id, "target_region": target_region,
+            "source_layer": layer, "target_layer": layer,
+        }
+    return transitions
+
+
+def build_region_topology(region_id, version, network, include_lanes=True):
     """将有效区域数据库拓扑建成导引版区域图和索引。
 
     输入
@@ -173,7 +164,7 @@ def build_delivered_topology(region_id, version, network, include_lanes=True):
         network：区域网络及设施记录。
         include_lanes：是否计算并保留车道偏移。
     输出
-        DeliveredTopology。
+        原生图、统计环境、节点数据库 ID 映射和边层号映射。
 
     原有说明
         Build one current regional physical graph from its database snapshot.
@@ -188,7 +179,7 @@ def build_delivered_topology(region_id, version, network, include_lanes=True):
     lanes_by_pipe = {}
     for row in network.get("lanes", ()):
         lanes_by_pipe.setdefault(int(row["pipe_id"]), []).append(dict(row))
-    edges, refs, stats, layers = {}, {}, {}, {}
+    edges, stats, layers = {}, {}, {}
     for row in network["pipes"]:
         if not bool(row.get("is_open", True)):
             continue
@@ -207,7 +198,7 @@ def build_delivered_topology(region_id, version, network, include_lanes=True):
                         offsets_start=offsets[0], offsets_end=offsets[1])
         edges[name] = edge
         ref = EdgeRef("pipe", pid)
-        refs[name], stats[ref] = ref, StatisticsEdge(edge, row.get("max_capacity", 50))
+        stats[ref] = StatisticsEdge(edge, row.get("max_capacity", 50))
         layers[name] = int(row.get("layer_id") or 0)
     for row in network["ramps"]:
         if not bool(row.get("is_open", True)):
@@ -223,19 +214,19 @@ def build_delivered_topology(region_id, version, network, include_lanes=True):
                         ramp_id=rid, lane_count=max(1, int(row.get("lane_number", 1))))
         edges[name] = edge
         ref = EdgeRef("ramp", rid)
-        refs[name], stats[ref] = ref, StatisticsEdge(edge)
+        stats[ref] = StatisticsEdge(edge)
         layers[name] = int(raw_nodes[int(row["start_node_id"])].get("layer_id") or 0)
+    transitions = _add_outbound_boundaries(region_id, raw_nodes, nodes, edges)
     graph = PartitionGraph(nodes, edges, {region_id: {"region_id": region_id}},
-                           {"database_adapter": "region-dt-delivery-v2",
-                            "boundary_transitions": {}}, int(version),
+                           {"database_adapter": "region-dt-topology-v2",
+                            "boundary_transitions": transitions}, int(version),
                            {int(row["ramp_id"]): bool(row.get("is_open", True))
                             for row in network["ramps"]})
-    return DeliveredTopology(region_id, version, graph, refs,
-                             StatisticsEnvironment(stats), external_ids, layers)
+    return graph, StatisticsEnvironment(stats), external_ids, layers
 
 
 def build_global_partition_graph(networks, version):
-    """拼接区域拓扑，按共享节点生成有向跨区连接。
+    """汇总各区域拓扑及目标节点存在于汇总范围内的出境边。
 
     输入
         networks：按区域 ID 索引的区域网络集合。
@@ -246,54 +237,21 @@ def build_global_partition_graph(networks, version):
     原有说明
         Compile the temporary center-DT global routing graph from all regions.
     """
-    topologies = {int(rid): build_delivered_topology(rid, version, network, False)
+    topologies = {int(rid): build_region_topology(rid, version, network, False)
                   for rid, network in networks.items()}
     nodes, edges, regions, ramp_states, transitions = {}, {}, {}, {}, {}
-    shared = {}
-    for rid, topology in topologies.items():
-        nodes.update(topology.graph.nodes)
-        edges.update(topology.graph.edges)
+    for rid, (graph, _, external_ids, _) in topologies.items():
+        nodes.update((name, graph.nodes[name]) for name in external_ids)
         regions[rid] = {"region_id": rid}
         ramp_states.update({"R{}:{}".format(rid, key): value
-                            for key, value in topology.graph.ramp_states.items()})
-        for row in networks[rid]["nodes"]:
-            memberships = tuple(int(v) for v in (row.get("region_ids") or (rid,)))
-            if len(memberships) > 1:
-                shared.setdefault(int(row["node_id"]), set()).update(memberships)
-
-    incoming, outgoing = {}, {}
-    for rid, topology in topologies.items():
-        for edge in topology.graph.edges.values():
-            incoming.setdefault((rid, edge.target), []).append(edge)
-            outgoing.setdefault((rid, edge.source), []).append(edge)
-    for external, memberships in shared.items():
-        for source_region in sorted(memberships):
-            source_node = regional_node_id(external, source_region)
-            for target_region in sorted(memberships):
-                if source_region == target_region:
-                    continue
-                target_node = regional_node_id(external, target_region)
-                if source_node not in nodes or target_node not in nodes:
-                    continue
-                for source_edge in incoming.get((source_region, source_node), ()):
-                    for target_edge in outgoing.get((target_region, target_node), ()):
-                        sl = topologies[source_region].layer_by_edge.get(source_edge.edge_id, 0)
-                        tl = topologies[target_region].layer_by_edge.get(target_edge.edge_id, 0)
-                        name = "B:N{}:R{}L{}:R{}L{}".format(
-                            external, source_region, sl, target_region, tl)
-                        if name in edges:
-                            continue
-                        point = nodes[source_node].position
-                        edges[name] = RoadEdge(
-                            name, source_node, target_node, source_region, "BOUNDARY",
-                            0., min(source_edge.speed_limit_mps, target_edge.speed_limit_mps),
-                            (point, point), lane_count=min(source_edge.lane_count,
-                                                          target_edge.lane_count))
-                        transitions[name] = {
-                            "shared_node_id": external,
-                            "source_region": source_region, "target_region": target_region,
-                            "source_layer": sl, "target_layer": tl,
-                        }
+                            for key, value in graph.ramp_states.items()})
+    for graph, _, _, _ in topologies.values():
+        for edge in graph.edges.values():
+            if edge.target not in nodes:
+                continue
+            edges[edge.edge_id] = edge
+            if edge.kind == "BOUNDARY":
+                transitions[edge.edge_id] = graph.metadata["boundary_transitions"][edge.edge_id]
     guidance_layers = {}
     for network in networks.values():
         layer_rows = network.get("layers") or [
@@ -311,59 +269,49 @@ def build_global_partition_graph(networks, version):
                           int(version), ramp_states)
 
 
-def attach_global_boundaries(local_topology, global_graph):
-    """把本区官方出境边和目标节点附加到本地拓扑并刷新索引。
-
-    输入
-        local_topology：当前区域拓扑及索引。
-        global_graph：覆盖参与区域的全局路网。
-    输出
-        更新后的本地拓扑。
-
-    原有说明
-        Add only this region's official outbound BOUNDARY edges to its live map.
-    """
-    rid = local_topology.region_id
-    for edge in global_graph.edges.values():
-        if edge.kind != "BOUNDARY" or edge.region_id != rid:
-            continue
-        if edge.source not in local_topology.graph.nodes:
-            continue
-        local_topology.graph.nodes[edge.target] = global_graph.nodes[edge.target]
-        local_topology.graph.edges[edge.edge_id] = edge
-    local_topology.graph.metadata["boundary_transitions"] = dict(
-        global_graph.metadata.get("boundary_transitions", {}))
-    local_topology.rebuild_indexes()
-    return local_topology
-
-
-def overlay_local_region(global_graph, local_topology):
+def overlay_local_region(global_graph, local_graph, region_id, node_external_ids):
     """将当前尝试的本地有效路网覆盖进全局图。
 
     输入
         global_graph：覆盖参与区域的全局路网。
-        local_topology：当前区域拓扑及索引。
+        local_graph：当前区域有效图。
+        region_id：当前区域编号。
+        node_external_ids：实际数据库节点的索引。
     输出
         更新后的全局图。
 
-    原有说明
-        Replace one summary region with this attempt's effective live network.
-        
-        The center graph may be five minutes old, while network adjustment changes
-        pipe/ramp availability or speed for the next attempt.  The official portal
-        summary must therefore use the current attempt's local costs for this
-        region, without replacing any other region or the center-owned boundaries.
     """
-    region_id = int(local_topology.region_id)
     obsolete = [
         edge_id
         for edge_id, edge in global_graph.edges.items()
-        if int(edge.region_id) == region_id and edge.kind != "BOUNDARY"
+        if int(edge.region_id) == region_id
     ]
+    transitions = global_graph.metadata.setdefault("boundary_transitions", {})
     for edge_id in obsolete:
         del global_graph.edges[edge_id]
-    global_graph.nodes.update(local_topology.graph.nodes)
-    global_graph.edges.update(local_topology.graph.edges)
+        transitions.pop(edge_id, None)
+    global_graph.ramp_states.update({
+        f"R{region_id}:{ramp_id}": enabled
+        for ramp_id, enabled in local_graph.ramp_states.items()
+    })
+    global_graph.nodes.update((name, local_graph.nodes[name])
+                              for name in node_external_ids)
+    for edge in local_graph.edges.values():
+        if edge.target not in global_graph.nodes:
+            continue
+        global_graph.edges[edge.edge_id] = edge
+        if edge.kind == "BOUNDARY":
+            transitions[edge.edge_id] = local_graph.metadata["boundary_transitions"][edge.edge_id]
+    # Native PartitionMaps reads numeric ramp IDs. Apply the regional state
+    # keys here, where identical ramp IDs in different regions are distinct.
+    closed_ramps = [
+        edge.edge_id for edge in global_graph.edges.values()
+        if edge.ramp_id is not None
+        and not global_graph.ramp_states.get(f"R{edge.region_id}:{edge.ramp_id}", True)
+    ]
+    for edge_id in closed_ramps:
+        del global_graph.edges[edge_id]
+        transitions.pop(edge_id, None)
     return global_graph
 
 
@@ -404,3 +352,71 @@ def graph_from_dict(value):
                           {int(k): v for k, v in value["regions"].items()},
                           dict(value.get("metadata") or {}), int(value["version"]),
                           dict(value.get("ramp_states") or {}))
+
+
+def guidance_transitions(graph):
+    """按端点的区域和最近高度层识别可加权的有向边。
+
+    输入
+        graph：内部路网对象。
+    输出
+        边 ID 到源、目标单元的映射。
+
+    原有说明
+        Map directed edges whose endpoints belong to different guidance cells.
+    """
+    layers = sorted(tuple(row) for row in graph.metadata.get("guidance_layers", ()))
+    if not layers:
+        # Older serialized database graphs retain layer IDs on their boundary records.
+        boundaries = graph.metadata.get("boundary_transitions", {})
+        layers = sorted({
+            (graph.nodes[node_id].position[2], int(item[layer_key]))
+            for edge_id, item in boundaries.items() if edge_id in graph.edges
+            for node_id, layer_key in (
+                (graph.edges[edge_id].source, "source_layer"),
+                (graph.edges[edge_id].target, "target_layer"),
+            )
+        })
+    if not layers:
+        layers = [(height, index) for index, height in enumerate(
+            sorted({node.position[2] for node in graph.nodes.values()}), start=1)]
+    cells = {
+        node_id: (int(node.region_id), min(
+            layers, key=lambda row: abs(float(row[0]) - node.position[2]))[1])
+        for node_id, node in graph.nodes.items()
+    }
+    return {
+        edge_id: (cells[edge.source], cells[edge.target])
+        for edge_id, edge in graph.edges.items()
+        if cells[edge.source] != cells[edge.target]
+        and (edge.ramp_id is None or graph.ramp_states.get(
+            "R{}:{}".format(edge.region_id, edge.ramp_id),
+            graph.ramp_states.get(edge.ramp_id, True)))
+    }
+
+
+def guidance_penalties(graph, transfers, weight_seconds=15.0):
+    """对已启用源单元按导引比例计算边的附加寻路代价。
+
+    输入
+        graph：内部路网对象。
+        transfers：按源和目标区域层定义的导引比例。
+        weight_seconds：导引附加代价的权重，单位秒。
+    输出
+        边 ID 到惩罚秒数的映射。
+    """
+    if weight_seconds <= 0:
+        return {}
+    policy = {
+        ((int(row["source_region_id"]), int(row["source_layer"])),
+         (int(row["target_region_id"]), int(row["target_layer"]))): float(row["proportion"])
+        for row in transfers
+    }
+    guided_sources = {source for source, _ in policy}
+    penalties = {}
+    for edge_id, (source, target) in guidance_transitions(graph).items():
+        if source in guided_sources:
+            probability = policy.get((source, target), 0.0)
+            if probability < 1.0:
+                penalties[edge_id] = -float(weight_seconds) * math.log(max(probability, 1e-6))
+    return penalties

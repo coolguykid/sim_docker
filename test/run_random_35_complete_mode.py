@@ -26,13 +26,13 @@ PROJECT_ROOT = TEST_ROOT.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.submit_guidance_demo import load_all_networks  # noqa: E402
-from simulation_engine.delivered_adapter import (  # noqa: E402
+from simulation_engine.routing_planning_input_adapter import (  # noqa: E402
     build_global_partition_graph,
     graph_to_dict,
+    guidance_transitions,
 )
 
 
-from simulation_engine.hybrid_maps import guidance_transitions
 
 
 REGION_IDS = tuple(range(1, 36))
@@ -238,8 +238,8 @@ def submit_requests(requests, workers):
     return responses
 
 
-def wait_for_run(run_id, timeout_seconds, expected_steps):
-    url = "http://127.0.0.1:18080/api/v1/runs/{}/attempts/0".format(run_id)
+def wait_for_run(run_id, timeout_seconds, expected_steps, attempt_id=0):
+    url = "http://127.0.0.1:18080/api/v1/runs/{}/attempts/{}".format(run_id, attempt_id)
     deadline = time.monotonic() + timeout_seconds
     next_report = 0.0
     last = None
@@ -308,12 +308,12 @@ def inspect_regions(run_id):
     }
 
 
-def inspect_outputs(run_id):
+def inspect_outputs(run_id, attempt_id=0):
     rows_by_time, departed_by_time = Counter(), Counter()
     total_bytes = 0
     for region_id in REGION_IDS:
         path = (PROJECT_ROOT / "output" / "region_{:02d}".format(region_id) /
-                run_id / "attempt_000" / "uav_states.csv")
+                run_id / "attempt_{:03d}".format(attempt_id) / "uav_states.csv")
         total_bytes += path.stat().st_size
         with path.open(encoding="utf-8-sig", newline="") as stream:
             for row in csv.DictReader(stream):

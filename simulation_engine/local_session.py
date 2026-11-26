@@ -3,18 +3,19 @@ from __future__ import annotations
 
 from collections import deque
 from copy import copy
+from dataclasses import replace
 from types import SimpleNamespace
 
+from uav_sim.airspace.partition_graph import PartitionMaps
 from uav_sim.algorithms.regional_control import RegionalControl
 from uav_sim.distributed.regional_backend import RegionalRoutingBackend
-from uav_sim.entities.partition_motion import RoadState, advance as advance_motion
+from uav_sim.entities.partition_motion import RoadState
 
 from .csv_output import RegionalCsvOutput
-from .delivered_adapter import (
-    attach_global_boundaries, build_delivered_topology, graph_from_dict,
+from .routing_planning_input_adapter import (
+    build_region_topology, edge_ref, graph_from_dict, guidance_penalties,
     overlay_local_region, pipe_edge_id, ramp_edge_id, regional_node_id)
 from .delivered_uav import DeliveredUAV
-from .hybrid_maps import HybridPartitionMaps
 from .statistics import EdgeStatisticsTracker, FixedIntervalEdgeStatisticsTracker
 
 
@@ -35,21 +36,31 @@ class LocalSimulationSession:
         self.dt = float(config.get("step_seconds", 1.0))
         if self.dt <= 0:
             raise ValueError("step_seconds must be positive")
-        self.topology = build_delivered_topology(
+        (self.graph, self.statistics_env, self.node_external_ids,
+         self.layer_by_edge) = build_region_topology(
             self.region_id, int(config["topology_version"]), config["network"])
         supplied_global = config.get("global_routing_graph")
         if supplied_global is None:
             raise ValueError("complete centralized_regional requires global_routing_graph")
         self.global_graph = (supplied_global if hasattr(supplied_global, "edges")
                              else graph_from_dict(supplied_global))
-        overlay_local_region(self.global_graph, self.topology)
-        attach_global_boundaries(self.topology, self.global_graph)
-        self.graph = self.topology.graph
-        self.maps = HybridPartitionMaps(
-            self.global_graph, self.graph,
+        overlay_local_region(self.global_graph, self.graph, self.region_id, self.node_external_ids)
+        penalties = guidance_penalties(
+            self.global_graph,
             config.get("global_guidance_transfers", ()),
-            config.get("guidance_revision", 1),
             config.get("guidance_edge_penalty_seconds", 15.0))
+        revision = int(config.get("guidance_revision", 1))
+        global_maps = PartitionMaps(self.global_graph).with_edge_penalties(penalties, revision)
+        local_penalties = {key: cost for key, cost in penalties.items() if key in self.graph.edges}
+        # Routing views share one version. CSV output retains the database snapshot version.
+        local_maps = PartitionMaps(
+            replace(self.graph, version=self.global_graph.version)
+        ).with_edge_penalties(local_penalties, revision)
+        self.maps = SimpleNamespace(
+            graph=self.global_graph, cost_revision=revision,
+            region=local_maps.region, summary=global_maps.summary,
+            destination=global_maps.destination,
+        )
         self.routing_backend = RegionalRoutingBackend(
             self.maps, mode="centralized_regional", use_ray=False)
         self.control = RegionalControl(self.graph)
@@ -65,7 +76,7 @@ class LocalSimulationSession:
         self.event_substeps = 0
         self.planning_failures = []
         self.statistics_history, self.fixed_statistics_history = deque(), deque()
-        env = self.topology.statistics_env
+        env = self.statistics_env
         self.statistics = EdgeStatisticsTracker(
             env, config.get("statistics_window_seconds", 60.0),
             config.get("statistics_interval_seconds", 5.0))
@@ -133,7 +144,7 @@ class LocalSimulationSession:
                 raise ValueError("snapshot edge {} is closed or absent".format(edge_id))
             return edge_id
         node_id = regional_node_id(mission["node_id"], self.region_id)
-        choices = self.topology.outgoing.get(node_id, ())
+        choices = [eid for _, _, eid in self.maps.region(self.region_id).adjacency.get(node_id, ())]
         if not choices:
             raise ValueError("snapshot node has no open outgoing edge")
         return choices[0]
@@ -158,7 +169,7 @@ class LocalSimulationSession:
             visited_regions=(self.region_id,),
             last_acceleration=float(mission.get("acceleration") or 0))
         uav = DeliveredUAV(
-            state, self.topology, mission.get("max_accel", 10.0),
+            state, self.graph, mission.get("max_accel", 10.0),
             mission.get("max_decel", 10.0), mission.get("spawn_turn", 0))
         self.uavs[uav.uav_id] = uav
         self.missions[uav.uav_id] = mission
@@ -200,10 +211,10 @@ class LocalSimulationSession:
                 continue
             payload = event["payload"]
             node_id = regional_node_id(event["boundary_node_id"], self.region_id)
-            choices = [eid for eid in self.topology.outgoing.get(node_id, ())
+            choices = [eid for _, _, eid in self.maps.region(self.region_id).adjacency.get(node_id, ())
                        if self.graph.edges[eid].kind != "BOUNDARY"]
             layer = int(payload.get("target_layer", 0))
-            matching = [eid for eid in choices if self.topology.layer_by_edge.get(eid) == layer]
+            matching = [eid for eid in choices if self.layer_by_edge.get(eid) == layer]
             choices = matching or choices
             if not choices:
                 raise ValueError("boundary node has no open target-region edge")
@@ -216,7 +227,7 @@ class LocalSimulationSession:
                 route=(edge_id,), edge_id=edge_id,
                 visited_regions=tuple(payload.get("visited_regions", ())) + (self.region_id,),
                 last_acceleration=float(event.get("acceleration") or 0))
-            uav = DeliveredUAV(state, self.topology, spawn_turn=self.step_index)
+            uav = DeliveredUAV(state, self.graph, spawn_turn=self.step_index)
             self.uavs[uav.uav_id] = uav
             self.missions[uav.uav_id] = mission
             self.epochs[uav.uav_id] = int(event["handoff_epoch"])
@@ -225,7 +236,7 @@ class LocalSimulationSession:
             except ValueError as exc:
                 uav.state = "BLOCKED"
                 self.planning_failures.append({"uav_id": uav.uav_id, "reason": str(exc)})
-            accepted.append(self.topology.edge_ref(edge_id))
+            accepted.append(edge_ref(self.graph.edges[edge_id]))
             new_ids.append(uav.uav_id)
             self.processed_handoff_ids.add(event_id)
             del self.pending_handoffs[event_id]
@@ -816,10 +827,10 @@ class LocalSimulationSession:
                 continue
             frame.append({"time": self.time, "uav_id": uid,
                           "region_id": self.region_id,
-                          "topology_version": self.topology.version,
+                          "topology_version": self.graph.version,
                           "state": state.status, "edge_type": ref.edge_type,
                           "edge_id": ref.edge_id,
-                          "node_id": self.topology.node_external_ids.get(state.node_id, -1),
+                          "node_id": self.node_external_ids.get(state.node_id, -1),
                           "lane_id": state.lane_id,
                           "distance_on_edge": state.progress,
                           "edge_length": edge.length_m, "speed": state.speed,

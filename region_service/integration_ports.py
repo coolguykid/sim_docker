@@ -22,7 +22,7 @@ def invoke_simulation_engine(simulation_input: dict, output_sink) -> dict:
     )
 
 
-def evaluate_statistics(engine_result: dict, request: dict) -> dict:
+def evaluate_statistics(engine_result: dict, request: dict, *, consecutive=None) -> dict:
     """依据完整统计窗口和拥堵阈值判断区域是否需要调整。
 
     输入
@@ -39,7 +39,8 @@ def evaluate_statistics(engine_result: dict, request: dict) -> dict:
     speed_ratio = float(policy.get("speed_ratio", 0.5))
     duration = float(policy.get("duration_seconds", 15.0))
     interval = float(policy.get("statistics_interval_seconds", 5.0))
-    consecutive = {}
+    if consecutive is None:
+        consecutive = {}
     severe = []
     for batch in engine_result.get("statistics", ()):
         active = set()

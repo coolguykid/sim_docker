@@ -79,6 +79,7 @@ def public_attempt(record):
             "registered_region_ids", "completed_steps", "sim_time",
             "handoff_count", "handoff_pairs", "decisions", "collective_decision", "error",
             "timing", "created_at", "started_at", "finished_at",
+            "congestion",
         )
     }
 
@@ -223,7 +224,7 @@ async def drive_attempt(record):
                     raise RuntimeError("zero-time event cycle made no handoff progress")
                 cursor = deadline
 
-            await asyncio.gather(*[
+            finished = await asyncio.gather(*[
                 _post(endpoint(region_id, "events/frame"), {
                     "frame_index": step_index,
                     "frame_time": frame_end,
@@ -253,6 +254,14 @@ async def drive_attempt(record):
             }
             record["completed_steps"] = step_index + 1
             record["sim_time"] = frame_end
+            triggers = {
+                str(region_id): frame["congestion"]
+                for region_id, frame in zip(record["expected_region_ids"], finished)
+                if frame.get("congestion")
+            }
+            if triggers:
+                record["congestion"] = {"time_s": frame_end, "regions": triggers}
+                break
         record["status"] = "simulation_completed"
         record["finished_at"] = datetime.now(timezone.utc).isoformat()
     except Exception as exc:

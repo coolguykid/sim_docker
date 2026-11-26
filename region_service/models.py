@@ -69,17 +69,3 @@ class GuidanceRequest(BaseModel):
             raise ValueError(
                 f"global guidance proportions must sum to 1 per source cell: {invalid_global}")
         return self
-
-
-class HandoffInput(BaseModel):
-    run_id: str = Field(min_length=1, max_length=128)
-    attempt_id: int = Field(ge=0)
-    event_id: str = Field(min_length=1, max_length=160)
-    uav_id: int
-    handoff_epoch: int = Field(ge=1)
-    from_region: int = Field(ge=1)
-    to_region: int = Field(ge=1)
-    boundary_node_id: int
-    crossing_time: float = Field(ge=0.0)
-    remaining_step_time: float = Field(ge=0.0)
-    payload: dict[str, Any] = Field(default_factory=dict)

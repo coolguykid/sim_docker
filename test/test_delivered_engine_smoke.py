@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import math
 from pathlib import Path
 import sys
 
@@ -10,8 +11,8 @@ sys.path.insert(0, str(ROOT / "无人机_大都会36区_导引版" / "src"))
 sys.path.insert(1, str(ROOT))
 
 from simulation_engine import LocalSimulationSession
-from simulation_engine.delivered_adapter import (
-    build_delivered_topology, build_global_partition_graph)
+from simulation_engine.routing_planning_input_adapter import (
+    build_region_topology, build_global_partition_graph, guidance_penalties)
 
 
 def _array(value, cast=float):
@@ -59,11 +60,11 @@ def _scenario():
         (edge_id, item) for edge_id, item in graph.metadata["boundary_transitions"].items()
         if item["source_region"] == 1 and item["target_region"] == 2)
     boundary = graph.edges[boundary_id]
-    source = build_delivered_topology(1, 1, networks[1])
-    target = build_delivered_topology(2, 1, networks[2])
-    source_edge = next(edge for edge in source.graph.edges.values()
+    source, _, source_external_ids, _ = build_region_topology(1, 1, networks[1])
+    target, _, target_external_ids, _ = build_region_topology(2, 1, networks[2])
+    source_edge = next(edge for edge in source.edges.values()
                        if edge.target == boundary.source and edge.kind != "BOUNDARY")
-    target_edge = next(edge for edge in target.graph.edges.values()
+    target_edge = next(edge for edge in target.edges.values()
                        if edge.source == boundary.target and edge.kind != "BOUNDARY")
     transfer = {
         "source_region_id": 1,
@@ -74,12 +75,12 @@ def _scenario():
     }
     mission = {
         "uav_id": 1, "region_id": 1,
-        "node_id": source.node_external_ids[source_edge.source],
+        "node_id": source_external_ids[source_edge.source],
         "current_edge": {"edge_type": "pipe", "edge_id": source_edge.pipe_id},
         "lane_id": 0, "distance_on_edge": max(0., source_edge.length_m-1.),
         "speed": 1., "acceleration": 0.,
         "destination_region_id": 2,
-        "destination_node_id": target.node_external_ids[target_edge.target],
+        "destination_node_id": target_external_ids[target_edge.target],
     }
     return networks, graph, transition, mission
 
@@ -94,6 +95,45 @@ def _config(tmp_path, region_id, network, graph, transfers, uavs):
         "guidance_revision": 1,
         "output_dir": str(tmp_path),
     }
+
+
+def test_outbound_boundaries_are_built_from_local_node_roles():
+    one = build_region_topology(1, 1, _network(1))[0]
+    two = build_region_topology(2, 1, _network(2))[0]
+    forward = one.edges["B:N5:R1L1:R2L1"]
+    reverse = two.edges["B:N6:R2L1:R1L1"]
+    assert (forward.source, forward.target, forward.length_m) == ("N:5:R1", "N:5:R2", 0)
+    assert (reverse.source, reverse.target, reverse.length_m) == ("N:6:R2", "N:6:R1", 0)
+    assert "B:N5:R2L1:R1L1" not in two.edges
+    assert "B:N6:R1L1:R2L1" not in one.edges
+    assert not build_global_partition_graph({1: _network(1)}, 1).metadata["boundary_transitions"]
+
+
+def test_sparse_guidance_applies_boundary_cost():
+    graph = build_global_partition_graph({1: _network(1), 2: _network(2)}, 1)
+    edge_id = "B:N5:R1L1:R2L1"
+    penalties = guidance_penalties(graph, [
+        {"source_region_id": 1, "source_layer": 1,
+         "target_region_id": 2, "target_layer": 1, "proportion": 0.5},
+    ])
+    assert math.isclose(penalties[edge_id], -15 * math.log(0.5))
+    assert "B:N6:R2L1:R1L1" not in penalties
+
+
+def test_region_map_uses_local_snapshot_with_global_routing_version(tmp_path):
+    networks, graph, _, mission = _scenario()
+    graph.version = 7
+    session = LocalSimulationSession(_config(tmp_path, 1, networks[1], graph, [], [mission]))
+    try:
+        local = session.maps.region(1)
+        assert set(local.edges) == set(session.graph.edges)
+        assert set(local.edges) - set(session.global_graph.edges)
+        assert local.version == session.maps.summary().version == 7
+        assert local.cost_revision == session.maps.summary().cost_revision
+        assert session.graph.version == 1
+        assert session._frame()[0]["topology_version"] == 1
+    finally:
+        session.close()
 
 
 def test_official_mode_selects_boundary_without_custom_portal_choice(tmp_path):

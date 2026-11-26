@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from models import GuidanceRequest, HandoffInput
+from models import GuidanceRequest
 from repository import (
     REGION_ID,
     database_ready,
@@ -17,12 +17,10 @@ from repository import (
     get_task,
     has_active_task,
     initialize_control_schema,
-    list_outbox,
     list_queued_keys,
     list_workflow_events,
     mark_status,
     requeue_task,
-    store_inbox,
     waiting_integration_status,
 )
 from workflow import run_workflow
@@ -30,6 +28,8 @@ from topology_reader import load_topology
 from simulation_result_reader import (
     frame_times_after,
     latest_result,
+    replay_attempts,
+    read_attempt_topology,
     load_snapshot as load_result_snapshot,
 )
 from distributed_runtime import (
@@ -174,6 +174,19 @@ def regional_topology(version_id: int | None = None, at: datetime | None = None)
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/simulation-results/replays")
+def list_simulation_replays():
+    return replay_attempts()
+
+
+@app.get("/api/v1/simulation-results/{run_id}/attempts/{attempt_id}/topology")
+def get_attempt_topology(run_id: str, attempt_id: int):
+    try:
+        return read_attempt_topology(run_id, attempt_id)
+    except (ValueError, LookupError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.get("/api/v1/simulation-results/latest")
@@ -328,19 +341,6 @@ def simulation_status(run_id: str, attempt_id: int):
     return public_task(task)
 
 
-@app.get("/api/v1/simulations/{run_id}/attempts/{attempt_id}/handoffs")
-def simulation_handoffs(run_id: str, attempt_id: int):
-    """查询指定尝试的出站移交记录。
-
-    输入
-        run_id：仿真运行标识。
-        attempt_id：同一运行的尝试编号。
-    输出
-        移交记录列表。
-    """
-    return {"events": list_outbox(run_id, attempt_id)}
-
-
 @app.get("/api/v1/simulations/{run_id}/attempts/{attempt_id}/events")
 def simulation_events(run_id: str, attempt_id: int):
     """查询指定尝试的工作流事件。
@@ -371,30 +371,6 @@ async def resume_simulation(run_id: str, attempt_id: int):
         )
     await queue.put((run_id, attempt_id))
     return {"accepted": True, "run_id": run_id, "attempt_id": attempt_id, "status": "queued"}
-
-
-@app.post("/api/v1/handoffs", status_code=status.HTTP_202_ACCEPTED)
-def receive_handoff(event: HandoffInput, response: Response):
-    """校验并幂等登记外部移交。
-
-    输入
-        event：单条移交或工作流事件。
-        response：用于设置状态码的 HTTP 响应对象。
-    输出
-        登记状态。
-    """
-    if event.to_region != REGION_ID:
-        raise HTTPException(status_code=422, detail="handoff target does not match this region")
-    created = store_inbox(event.model_dump(mode="json"))
-    if not created:
-        response.status_code = status.HTTP_200_OK
-    return {
-        "accepted": True,
-        "created": created,
-        "event_id": event.event_id,
-        "status": "received",
-        "note": "phase 1 persists inbound handoffs; synchronized insertion is implemented with region-to-region scheduling",
-    }
 
 
 @app.post("/api/v1/distributed/runs/{run_id}/attempts/{attempt_id}/handoffs", status_code=202)

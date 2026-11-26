@@ -71,33 +71,6 @@ def initialize_control_schema() -> None:
                 finished_at TIMESTAMPTZ,
                 PRIMARY KEY (run_id, attempt_id, region_id)
             );
-            CREATE TABLE IF NOT EXISTS handoff_outbox (
-                event_id TEXT PRIMARY KEY,
-                run_id TEXT NOT NULL,
-                attempt_id INTEGER NOT NULL,
-                uav_id INTEGER NOT NULL,
-                handoff_epoch INTEGER NOT NULL,
-                from_region INTEGER NOT NULL,
-                to_region INTEGER NOT NULL,
-                boundary_node_id BIGINT NOT NULL,
-                crossing_time DOUBLE PRECISION NOT NULL,
-                remaining_step_time DOUBLE PRECISION NOT NULL,
-                payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-                status TEXT NOT NULL DEFAULT 'pending',
-                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-            );
-            CREATE TABLE IF NOT EXISTS handoff_inbox (
-                event_id TEXT PRIMARY KEY,
-                run_id TEXT NOT NULL,
-                attempt_id INTEGER NOT NULL,
-                uav_id INTEGER NOT NULL,
-                handoff_epoch INTEGER NOT NULL,
-                from_region INTEGER NOT NULL,
-                to_region INTEGER NOT NULL,
-                payload JSONB NOT NULL,
-                status TEXT NOT NULL DEFAULT 'received',
-                received_at TIMESTAMPTZ NOT NULL DEFAULT now()
-            );
             CREATE TABLE IF NOT EXISTS region_dt_workflow_event (
                 event_seq BIGSERIAL PRIMARY KEY,
                 run_id TEXT NOT NULL,
@@ -342,77 +315,6 @@ def mark_status(run_id: str, attempt_id: int, status: str, **fields) -> None:
             values,
         )
 
-
-def store_outbox(event: dict) -> None:
-    """保存一条出站移交记录。
-
-    输入
-        event：单条移交或工作流事件。
-    输出
-        None。
-    """
-    with connection() as conn:
-        conn.execute(
-            """
-            INSERT INTO handoff_outbox(
-                event_id,run_id,attempt_id,uav_id,handoff_epoch,from_region,to_region,
-                boundary_node_id,crossing_time,remaining_step_time,payload)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb)
-            ON CONFLICT(event_id) DO NOTHING
-            """,
-            (
-                event["event_id"], event["run_id"], event["attempt_id"],
-                event["uav_id"], event["handoff_epoch"], event["from_region"],
-                event["to_region"], event["boundary_node_id"], event["crossing_time"],
-                event["remaining_step_time"], json.dumps(event.get("payload", {})),
-            ),
-        )
-
-
-def store_inbox(event: dict) -> bool:
-    """幂等保存入站移交记录。
-
-    输入
-        event：单条移交或工作流事件。
-    输出
-        是否新建。
-    """
-    with connection() as conn:
-        result = conn.execute(
-            """
-            INSERT INTO handoff_inbox(
-                event_id,run_id,attempt_id,uav_id,handoff_epoch,from_region,to_region,payload)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb)
-            ON CONFLICT(event_id) DO NOTHING
-            """,
-            (
-                event["event_id"], event["run_id"], event["attempt_id"],
-                event["uav_id"], event["handoff_epoch"], event["from_region"],
-                event["to_region"], json.dumps(event),
-            ),
-        )
-        return result.rowcount == 1
-
-
-def list_outbox(run_id: str, attempt_id: int) -> list[dict]:
-    """读取指定尝试的出站移交记录。
-
-    输入
-        run_id：仿真运行标识。
-        attempt_id：同一运行的尝试编号。
-    输出
-        移交记录列表。
-    """
-    with connection(row_factory=dict_row) as conn:
-        rows = conn.execute(
-            "SELECT * FROM handoff_outbox WHERE run_id=%s AND attempt_id=%s "
-            "ORDER BY crossing_time,event_id",
-            (run_id, attempt_id),
-        ).fetchall()
-        return [dict(row) for row in rows]
-
-
-# 拓扑查询、推演快照与道路状态写入。
 
 def fetch_topology_rows(version_id: int | None, at: datetime) -> tuple:
     """在同一个只读事务中查询区域拓扑及设施状态。

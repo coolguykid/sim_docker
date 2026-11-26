@@ -29,8 +29,8 @@ DELIVERY_SOURCE = next(
 sys.path.insert(0, str(DELIVERY_SOURCE))
 sys.path.insert(1, str(ROOT))
 
-from simulation_engine.delivered_adapter import (  # noqa: E402
-    build_delivered_topology,
+from simulation_engine.routing_planning_input_adapter import (  # noqa: E402
+    build_region_topology,
     build_global_partition_graph,
     graph_to_dict,
 )
@@ -105,6 +105,7 @@ def _network_from_topology(dto):
             "node_id": int(row["nodeId"]),
             "position": list(map(float, row["position"])),
             "region_ids": [int(value) for value in row["regionIds"]],
+            "boundary_type": int(row["boundaryType"]),
             "layer_id": None if row["layerId"] is None else int(row["layerId"]),
         }
         for row in dto["nodes"]
@@ -190,17 +191,17 @@ def build_requests(root, run_id, duration, networks=None):
         if item["source_region"] == 1 and item["target_region"] == 2
     )
     boundary = global_graph.edges[boundary_id]
-    source = build_delivered_topology(
+    source, _, source_external_ids, _ = build_region_topology(
         1, int(networks[1].get("_topology_version", 1)), networks[1])
-    target = build_delivered_topology(
+    target, _, target_external_ids, _ = build_region_topology(
         2, int(networks[2].get("_topology_version", 1)), networks[2])
     source_edge = next(
-        edge for edge in source.graph.edges.values()
-        if edge.target == boundary.source
+        edge for edge in source.edges.values()
+        if edge.target == boundary.source and edge.kind != "BOUNDARY"
     )
     entry = next(
-        edge for edge in target.graph.edges.values()
-        if edge.source == boundary.target
+        edge for edge in target.edges.values()
+        if edge.source == boundary.target and edge.kind != "BOUNDARY"
     )
     global_transfer = {
         "source_region_id": 1,
@@ -212,14 +213,14 @@ def build_requests(root, run_id, duration, networks=None):
     mission = {
         "uav_id": 1,
         "region_id": 1,
-        "node_id": source.node_external_ids[source_edge.source],
+        "node_id": source_external_ids[source_edge.source],
         "current_edge": {"edge_type": "pipe", "edge_id": source_edge.pipe_id},
         "lane_id": 0,
         "distance_on_edge": max(0.0, source_edge.length_m - 20.0),
         "speed": 10.0,
         "acceleration": 0.0,
         "destination_region_id": 2,
-        "destination_node_id": target.node_external_ids[entry.target],
+        "destination_node_id": target_external_ids[entry.target],
     }
     now = datetime.now(timezone.utc).isoformat()
     common = {

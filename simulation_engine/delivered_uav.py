@@ -3,15 +3,17 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from .routing_planning_input_adapter import edge_ref
+
 
 class DeliveredUAV:
-    def __init__(self, road_state, topology, max_accel=10.0, max_decel=10.0,
+    def __init__(self, road_state, graph, max_accel=10.0, max_decel=10.0,
                  spawn_turn=0):
         """封装飞机路网状态、拓扑、加减速上限和计划起飞帧。
 
         输入
             road_state：无人机在路网中的运动状态。
-            topology：无人机所在区域的拓扑对象。
+            graph：无人机所在区域的拓扑对象。
             max_accel：最大加速度。
             max_decel：最大制动减速度的正值。
             spawn_turn：无人机计划起飞的帧编号。
@@ -19,7 +21,7 @@ class DeliveredUAV:
             None。
         """
         self._road_state = road_state
-        self.topology = topology
+        self.graph = graph
         self.max_accel = float(max_accel)
         self.max_decel = float(max_decel)
         self.spawn_turn = int(spawn_turn)
@@ -125,7 +127,7 @@ class DeliveredUAV:
             edge_id = self._road_state.route[self._road_state.route_index]
         if not edge_id and self._road_state.route:
             edge_id = self._road_state.route[-1]
-        return self.topology.edge_ref(edge_id)
+        return edge_ref(self.graph.edges[edge_id])
 
     def position_3d(self):
         """读取飞机的三维位置。

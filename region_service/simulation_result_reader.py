@@ -4,6 +4,7 @@ from __future__ import annotations
 import bisect
 import csv
 import io
+import json
 import os
 import re
 from pathlib import Path
@@ -193,6 +194,29 @@ def latest_result() -> dict:
         "maxTime": max_time,
         "hasStatistics": (directory / "edge_statistics.csv").is_file(),
     }
+
+
+def replay_attempts():
+    results = []
+    for _, run_id, attempt_id, directory in sorted(_attempts(), reverse=True):
+        timeline_path = directory / "frame_times.csv"
+        if not (directory / "topology.json").is_file() or not timeline_path.is_file():
+            continue
+        timeline = _index(timeline_path)
+        max_time = timeline.latest_time()
+        if max_time is not None:
+            results.append({
+                "runId": run_id, "attemptId": attempt_id,
+                "minTime": timeline.times[0], "maxTime": max_time,
+            })
+    return results
+
+
+def read_attempt_topology(run_id, attempt_id):
+    path = _safe_attempt(run_id, attempt_id) / "topology.json"
+    if not path.is_file():
+        raise LookupError("attempt topology is unavailable")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _safe_attempt(run_id: str, attempt_id: int) -> Path:

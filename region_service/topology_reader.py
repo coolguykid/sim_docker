@@ -11,6 +11,16 @@ from datetime import datetime, timezone
 from repository import REGION_ID, fetch_topology_rows
 
 
+def attempt_topology(snapshot):
+    at = snapshot["snapshot_time"]
+    region, version, layers, *_ = fetch_topology_rows(snapshot["topology_version"], at)
+    network = snapshot["network"]
+    return project_topology(
+        region, version, layers, network["nodes"], network["pipes"],
+        network["ramps"], network["lanes"], at,
+    )
+
+
 def _point_path(values) -> list[list[float]]:
     """将数据库路径坐标转换为三维点列表。
 
@@ -50,6 +60,10 @@ def load_topology(version_id: int | None = None, state_time: datetime | None = N
     at = state_time or datetime.now(timezone.utc)
     rows = fetch_topology_rows(version_id, at)
     region, version, layers, nodes, pipes, ramps, lanes = rows
+    return project_topology(region, version, layers, nodes, pipes, ramps, lanes, at)
+
+
+def project_topology(region, version, layers, nodes, pipes, ramps, lanes, at):
     selected_version = int(version["version_id"])
 
     return {
@@ -105,7 +119,7 @@ def load_topology(version_id: int | None = None, state_time: datetime | None = N
                     "speedLimit": float(row["speed_limit"]),
                     "safeDistance": float(row["d_safe"]),
                     "maxCapacity": int(row["max_capacity"]),
-                    "sampleTime": row["status_time"],
+                    "sampleTime": row.get("status_time"),
                 },
             }
             for row in pipes
@@ -125,7 +139,7 @@ def load_topology(version_id: int | None = None, state_time: datetime | None = N
                 "path": _point_path(row["ramp_path"]),
                 "state": {
                     "isOpen": bool(row["is_open"]),
-                    "sampleTime": row["status_time"],
+                    "sampleTime": row.get("status_time"),
                 },
             }
             for row in ramps
